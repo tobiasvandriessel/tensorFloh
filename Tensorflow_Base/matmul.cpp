@@ -1,9 +1,30 @@
 #include <vector>
 #include <eigen/Dense>
 
+#include <iostream>
+#include <sstream>
+#include <string>
+#include <ctime>
+#include <cstdio>
+
+#include <opencv2/core.hpp>
+#include <opencv2/core/utility.hpp>
+#include <opencv2/imgproc.hpp>
+#include <opencv2/calib3d.hpp>
+#include <opencv2/imgcodecs.hpp>
+#include <opencv2/videoio.hpp>
+#include <opencv2/highgui.hpp>
+
 #include "matmul.h"
 #include "tensorflow/core/public/session.h"
 #include "tensorflow/cc/ops/standard_ops.h"
+
+#ifdef _MSC_VER
+#pragma warning(disable:4996)
+#endif
+
+using namespace cv;
+using namespace std;
 
 using namespace tensorflow;
 
@@ -29,6 +50,8 @@ GraphDef CreateGraphDef()
 int main()
 {
     GraphDef graph_def = CreateGraphDef();
+
+	//ops::Variable()
 
     // Start up the session
     SessionOptions options;
