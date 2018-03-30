@@ -47,6 +47,33 @@ using namespace std;
 
 using namespace tensorflow;
 
+
+//Helper function found on StackOverflow to get the types of Matrices.
+//Purely used for debugging.
+string type2str(int type) {
+	string r;
+
+	uchar depth = type & CV_MAT_DEPTH_MASK;
+	uchar chans = 1 + (type >> CV_CN_SHIFT);
+
+	switch (depth) {
+	case CV_8U:  r = "8U"; break;
+	case CV_8S:  r = "8S"; break;
+	case CV_16U: r = "16U"; break;
+	case CV_16S: r = "16S"; break;
+	case CV_32S: r = "32S"; break;
+	case CV_32F: r = "32F"; break;
+	case CV_64F: r = "64F"; break;
+	default:     r = "User"; break;
+	}
+
+	r += "C";
+	r += (chans + '0');
+
+	return r;
+}
+
+
 // Build a computation graph that takes a tensor of shape [?, 2] and
 // multiplies it by a hard-coded matrix.
 GraphDef CreateGraphDef()
@@ -141,7 +168,7 @@ int extractFeaturesFromVideo(string path) {
 
 	int frameNumber = (int)(m_frame_amount / 2);
 
-	//m_video.set(CV_CAP_PROP_POS_FRAMES, frameNumber);  // Go back to the start
+	m_video.set(CV_CAP_PROP_POS_FRAMES, frameNumber);  // Go back to the start
 
 	Mat m_frame;
 	m_video >> m_frame;
@@ -153,23 +180,27 @@ int extractFeaturesFromVideo(string path) {
 	cout << "Framenumber: " << frameNumber << endl;
 
 	//cvShowImage("windows", &m_frame);
-	/*imshow("windows", m_frame);
-	imshow("windows", m_frame);*/
+	/*imshow("windows", m_frame);*/
+	imshow("windows", m_frame);
+	waitKey(1);
 
-	Mat gray;
+	//Mat gray;
 
-	for (int i = 0; i < m_frame_amount - 1; i++) {
-		cout << i << endl;
-		m_video >> m_frame;
-		assert(!m_frame.empty());
-		cvtColor(m_frame, gray, CV_BGR2GRAY);
-		imshow("windows", gray);
-		//imshow("windows", m_frame);
+	
 
-		//cout << m_frame << endl;
-		//cin >> path;
-		
-	}
+	//for (int i = 0; i < m_frame_amount - 1; i++) {
+	//	cout << i << endl;
+	//	m_video >> m_frame;
+	//	assert(!m_frame.empty());
+	//	//cvtColor(m_frame, gray, CV_BGR2GRAY);
+	//	imshow("windows", m_frame);
+	//	//imshow("windows", gray);
+	//	waitKey(1);
+
+	//	//cout << m_frame << endl;
+	//	//cin >> path;
+	//	
+	//}
 	//m_video >> m_frame;
 	//imshow("windows", m_frame);
 
@@ -185,24 +216,6 @@ int extractFeaturesFromVideo(string path) {
 
 int main()
 {
-	VideoCapture m_video = VideoCapture(0);
-
-	Mat m_frame;
-
-	for (int i = 0; i < 1000; i++) {
-		m_video.read(m_frame);// >> m_frame;
-		assert(!m_frame.empty());
-
-		imshow("nothing", m_frame);
-		for (int j = 0; j < 5; j++)
-			cout << "haha" + j;
-	}
-
-	string a;
-
-	cin >> a;
-
-
 
 
 	string answer;
@@ -218,6 +231,7 @@ int main()
 		cout << "read n" << endl;
 	}
 
+	cout << "Offline stuff done" << endl;
 
 	cin >> answer;
 	//switch 
