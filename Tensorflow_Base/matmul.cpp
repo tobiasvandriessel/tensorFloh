@@ -188,6 +188,13 @@ int extractFeaturesFromVideo(string path) {
 	resize(prevFrame, prevFrame, Size(90, 90), 0, 0, INTER_AREA);
 	resize(nextFrame, nextFrame, Size(90, 90), 0, 0, INTER_AREA);
 
+	GaussianBlur(prevFrame, prevFrame, Size(5, 5), 5.0, 5.0);
+	GaussianBlur(nextFrame, nextFrame, Size(5, 5), 5.0, 5.0);
+
+
+
+
+
 	
 	return 0;
 }
