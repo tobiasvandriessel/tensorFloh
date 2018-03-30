@@ -198,6 +198,11 @@ int extractFeaturesFromVideo(string path) {
 
 	waitKey(500);
 
+	Ptr<Feature2D> orb = ORB::create();
+	std::vector<KeyPoint> keypointsPrev, keypointsNext;
+	orb->detectAndCompute(prevFrame, Mat(), keypointsPrev, noArray());
+	orb->detectAndCompute(nextFrame, Mat(), keypointsNext, noArray());
+
 
 	
 	return 0;
