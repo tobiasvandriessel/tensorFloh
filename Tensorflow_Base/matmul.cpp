@@ -180,7 +180,7 @@ int extractFeaturesFromVideo(string path) {
 
 	//cvShowImage("windows", &m_frame);
 	/*imshow("windows", m_frame);*/
-	imshow("windows", prevFrame);
+	imshow("windows1", prevFrame);
 	waitKey(1);
 
 	m_video >> nextFrame;
@@ -188,11 +188,15 @@ int extractFeaturesFromVideo(string path) {
 	resize(prevFrame, prevFrame, Size(90, 90), 0, 0, INTER_AREA);
 	resize(nextFrame, nextFrame, Size(90, 90), 0, 0, INTER_AREA);
 
-	GaussianBlur(prevFrame, prevFrame, Size(5, 5), 5.0, 5.0);
-	GaussianBlur(nextFrame, nextFrame, Size(5, 5), 5.0, 5.0);
+	GaussianBlur(prevFrame, prevFrame, Size(5, 5), 3.0, 3.0);
+	GaussianBlur(nextFrame, nextFrame, Size(5, 5), 3.0, 3.0);
 
+	waitKey(500);
 
+	imshow("windows23", prevFrame);
+	waitKey(1);
 
+	waitKey(500);
 
 
 	
