@@ -168,49 +168,27 @@ int extractFeaturesFromVideo(string path) {
 
 	int frameNumber = (int)(m_frame_amount / 2);
 
-	m_video.set(CV_CAP_PROP_POS_FRAMES, frameNumber);  // Go back to the start
-
-	Mat m_frame;
-	m_video >> m_frame;
-	assert(!m_frame.empty());
+	m_video.set(CV_CAP_PROP_POS_FRAMES, frameNumber);  // Go to halfway in the video HERE WE COULD DO SOMETHING MORE ELABORATE?
+	Mat prevFrame, nextFrame;
+	m_video >> prevFrame;
+	assert(!prevFrame.empty());
 
 	//imshow()
 
-	cout << "path: " << path << endl;
-	cout << "Framenumber: " << frameNumber << endl;
+	//cout << "path: " << path << endl;
+	//cout << "Framenumber: " << frameNumber << endl;
 
 	//cvShowImage("windows", &m_frame);
 	/*imshow("windows", m_frame);*/
-	imshow("windows", m_frame);
+	imshow("windows", prevFrame);
 	waitKey(1);
 
-	//Mat gray;
+	m_video >> nextFrame;
+
+	resize(prevFrame, prevFrame, Size(90, 90), 0, 0, INTER_AREA);
+	resize(nextFrame, nextFrame, Size(90, 90), 0, 0, INTER_AREA);
 
 	
-
-	//for (int i = 0; i < m_frame_amount - 1; i++) {
-	//	cout << i << endl;
-	//	m_video >> m_frame;
-	//	assert(!m_frame.empty());
-	//	//cvtColor(m_frame, gray, CV_BGR2GRAY);
-	//	imshow("windows", m_frame);
-	//	//imshow("windows", gray);
-	//	waitKey(1);
-
-	//	//cout << m_frame << endl;
-	//	//cin >> path;
-	//	
-	//}
-	//m_video >> m_frame;
-	//imshow("windows", m_frame);
-
-
-
-	/*for (int i = 0; i < 1000; i++) {
-		cout << "Hmm haha " << i << endl;
-	}*/
-
-	//cin >> path;
 	return 0;
 }
 
@@ -230,6 +208,8 @@ int main()
 	else if (answer == "n") {
 		cout << "read n" << endl;
 	}
+
+	//KeyPoint::convert()
 
 	cout << "Offline stuff done" << endl;
 
