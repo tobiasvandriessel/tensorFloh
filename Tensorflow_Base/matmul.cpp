@@ -32,6 +32,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
+//#include <opencv2/tracking.hpp>
 //#include <opencv2/highgui/highgui_c.h>
 //#include <opencv2/imgproc/types_c.h>
 
@@ -199,11 +200,14 @@ int extractFeaturesFromVideo(string path) {
 	waitKey(500);
 
 	Ptr<Feature2D> orb = ORB::create();
-	std::vector<KeyPoint> keypointsPrev, keypointsNext;
+	std::vector<KeyPoint> keypointsPrev;
 	orb->detectAndCompute(prevFrame, Mat(), keypointsPrev, noArray());
-	orb->detectAndCompute(nextFrame, Mat(), keypointsNext, noArray());
 
+	vector<cv::Point2f> pts1(keypointsPrev.size()), pts2;
 
+	KeyPoint::convert(keypointsPrev, pts1);
+
+	//flow
 	
 	return 0;
 }
