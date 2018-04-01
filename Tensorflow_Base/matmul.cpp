@@ -32,7 +32,7 @@
 #include <opencv2/imgcodecs.hpp>
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
-//#include <opencv2/tracking.hpp>
+#include <opencv2/video/tracking.hpp>
 //#include <opencv2/highgui/highgui_c.h>
 //#include <opencv2/imgproc/types_c.h>
 
@@ -186,11 +186,11 @@ int extractFeaturesFromVideo(string path) {
 
 	m_video >> nextFrame;
 
-	resize(prevFrame, prevFrame, Size(90, 90), 0, 0, INTER_AREA);
-	resize(nextFrame, nextFrame, Size(90, 90), 0, 0, INTER_AREA);
+	resize(prevFrame, prevFrame, Size(120, 120), 0, 0, INTER_AREA);
+	resize(nextFrame, nextFrame, Size(120, 120), 0, 0, INTER_AREA);
 
-	GaussianBlur(prevFrame, prevFrame, Size(5, 5), 3.0, 3.0);
-	GaussianBlur(nextFrame, nextFrame, Size(5, 5), 3.0, 3.0);
+	GaussianBlur(prevFrame, prevFrame, Size(5, 5), 2.0, 2.0);
+	GaussianBlur(nextFrame, nextFrame, Size(5, 5), 2.0, 2.0);
 
 	waitKey(500);
 
@@ -203,11 +203,38 @@ int extractFeaturesFromVideo(string path) {
 	std::vector<KeyPoint> keypointsPrev;
 	orb->detectAndCompute(prevFrame, Mat(), keypointsPrev, noArray());
 
+	Mat outputFrame;
+	drawKeypoints(prevFrame, keypointsPrev, outputFrame);
+	imshow("windows23", outputFrame);
+	waitKey(1);
+
+	Mat prevGray, nextGray;
+	cvtColor(prevFrame, prevGray, CV_BGR2GRAY);
+	cvtColor(nextFrame, nextGray, CV_BGR2GRAY);
+
 	vector<cv::Point2f> pts1(keypointsPrev.size()), pts2;
 
 	KeyPoint::convert(keypointsPrev, pts1);
 
-	//flow
+	vector<uchar> status(keypointsPrev.size());
+
+	vector<float> error(keypointsPrev.size());
+
+	calcOpticalFlowPyrLK(prevGray, nextGray, pts1, pts2, status, error);
+
+	for (int i = 0; i < keypointsPrev.size(); i++) {
+		if (status[i] == 0) continue;
+
+		int line_thickness = 1;
+
+		Scalar lineColor(255, 0, 0);
+
+		line(prevGray, pts1[i], pts2[i] + (pts2[i] - pts1[i]) * 5, lineColor, line_thickness);
+
+	}
+
+	imshow("windows23", prevGray);
+	waitKey(500);
 	
 	return 0;
 }
