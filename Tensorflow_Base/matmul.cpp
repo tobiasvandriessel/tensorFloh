@@ -74,6 +74,90 @@ string type2str(int type) {
 	return r;
 }
 
+static void drawOptFlowMap(const Mat& flow, Mat& cflowmap, int step
+	, const Scalar& color)
+{
+	for (int y = 0; y < cflowmap.rows; y += step)
+		for (int x = 0; x < cflowmap.cols; x += step)
+		{
+			const Point2f& fxy = flow.at<Point2f>(y, x);
+			line(cflowmap, Point(x, y), Point(cvRound(x + fxy.x), cvRound(y + fxy.y)),
+				color);
+			//circle(cflowmap, Point(x, y), 1, color, -1);
+		}
+}
+
+void sortVectorSize4(vector<Point2f>& vec) {
+	//Point2f temp;
+	if (vec[0].dot(vec[0]) > vec[2].dot(vec[2])) {
+		
+		swap(vec[0], vec[2]);
+/*
+		temp = vec[0];
+		vec[0] = vec[2];
+		vec[2] = temp;*/
+	}
+	if (vec[1].dot(vec[1]) > vec[3].dot(vec[3])) {
+		swap(vec[1], vec[3]);
+		/*temp = vec[1];
+		vec[1] = vec[3];
+		vec[3] = temp;*/
+	}
+	if (vec[0].dot(vec[0]) > vec[1].dot(vec[1])) {
+		swap(vec[0], vec[1]);
+		/*temp = vec[0];
+		vec[0] = vec[1];
+		vec[1] = temp;*/
+	}
+	if (vec[2].dot(vec[2]) > vec[3].dot(vec[3])) {
+		swap(vec[2], vec[3]);
+		/*temp = vec[2];
+		vec[2] = vec[3];
+		vec[3] = temp;*/
+	}
+	if (vec[1].dot(vec[1]) > vec[2].dot(vec[2])) {
+		swap(vec[1], vec[2]);
+		/*temp = vec[1];
+		vec[1] = vec[2];
+		vec[2] = temp;*/
+	}
+
+	//cout << "First four elements of vec: " << vec[0] << ", " << vec[1] << ", " << vec[2] << ", " << vec[3] << endl;
+
+
+}
+
+
+void doMaxKernelVector(Mat& input, Mat& output, int kernelSize) {
+	int inputWidth = input.size().width, inputHeight = input.size().height;
+	output = Mat(inputHeight - kernelSize + 1, inputWidth - kernelSize + 1, CV_32FC2);
+
+	cout << "First four elements of input: " << input.at<Point2f>(0, 0) << ", " << input.at<Point2f>(0, 1) << ", " << input.at<Point2f>(1, 0) << ", " << input.at<Point2f>(1, 1) << endl;
+
+
+	vector<Point2f> temp(kernelSize*kernelSize);
+	for (int y = 0; y < inputHeight - kernelSize + 1; y++) {
+		for (int x = 0; x < inputWidth - kernelSize + 1; x++) {
+			temp.clear();
+
+			for (int ky = 0; ky < kernelSize; ky++) {
+				for (int kx = 0; kx < kernelSize; kx++) {
+					temp.push_back(input.at<Point2f>(y + ky, x + kx));
+				}
+			}
+			if (kernelSize == 2)
+				sortVectorSize4(temp);
+			else
+				cout << "vector was not of size 4, so cant sort in doMaxKernelVector" << endl;
+			output.at<Point2f>(y, x) = temp[3];
+
+		}
+	}
+
+	cout << "First element of output: " << output.at<Point2f>(0, 0) << endl;
+
+}
+
 
 // Build a computation graph that takes a tensor of shape [?, 2] and
 // multiplies it by a hard-coded matrix.
@@ -186,11 +270,11 @@ int extractFeaturesFromVideo(string path) {
 
 	m_video >> nextFrame;
 
-	resize(prevFrame, prevFrame, Size(120, 120), 0, 0, INTER_AREA);
-	resize(nextFrame, nextFrame, Size(120, 120), 0, 0, INTER_AREA);
+	resize(prevFrame, prevFrame, Size(240, 240), 0, 0, INTER_AREA);
+	resize(nextFrame, nextFrame, Size(240, 240), 0, 0, INTER_AREA);
 
-	GaussianBlur(prevFrame, prevFrame, Size(5, 5), 2.0, 2.0);
-	GaussianBlur(nextFrame, nextFrame, Size(5, 5), 2.0, 2.0);
+	GaussianBlur(prevFrame, prevFrame, Size(5, 5), 1.0, 1.0);
+	GaussianBlur(nextFrame, nextFrame, Size(5, 5), 1.0, 1.0);
 
 	waitKey(500);
 
@@ -199,30 +283,26 @@ int extractFeaturesFromVideo(string path) {
 
 	waitKey(500);
 
-	Ptr<Feature2D> orb = ORB::create();
-	std::vector<KeyPoint> keypointsPrev;
-	orb->detectAndCompute(prevFrame, Mat(), keypointsPrev, noArray());
-
-	Mat outputFrame;
-	drawKeypoints(prevFrame, keypointsPrev, outputFrame);
-	imshow("windows23", outputFrame);
-	waitKey(1);
-
 	Mat prevGray, nextGray;
 	cvtColor(prevFrame, prevGray, CV_BGR2GRAY);
 	cvtColor(nextFrame, nextGray, CV_BGR2GRAY);
+	
+	//if (keypointsPrev.size() == 0) return 0;
+	Mat flow;
 
-	vector<cv::Point2f> pts1(keypointsPrev.size()), pts2;
+	//calcOpticalFlowPyrLK()
 
-	KeyPoint::convert(keypointsPrev, pts1);
+	calcOpticalFlowFarneback(prevGray, nextGray, flow, 0.5, 3, 15, 3, 5, 1.1, 0);//, status, error);
 
-	vector<uchar> status(keypointsPrev.size());
+	/*Mat cflow;
+	cvtColor(prevGray, cflow, CV_GRAY2BGR);
+	drawOptFlowMap(flow, cflow, 10, CV_RGB(0, 255, 0));*/
 
-	vector<float> error(keypointsPrev.size());
+	Mat outputFlow;
+	doMaxKernelVector(flow, outputFlow, 2);
+	
 
-	calcOpticalFlowPyrLK(prevGray, nextGray, pts1, pts2, status, error);
-
-	for (int i = 0; i < keypointsPrev.size(); i++) {
+	/*for (int i = 0; i < length; i++) {
 		if (status[i] == 0) continue;
 
 		int line_thickness = 1;
@@ -231,13 +311,17 @@ int extractFeaturesFromVideo(string path) {
 
 		line(prevGray, pts1[i], pts2[i] + (pts2[i] - pts1[i]) * 5, lineColor, line_thickness);
 
-	}
+	}*/
 
-	imshow("windows23", prevGray);
-	waitKey(500);
+
+
+	/*imshow("windows23", cflow);
+	waitKey(500);*/
 	
 	return 0;
 }
+
+
 
 int main()
 {

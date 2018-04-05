@@ -159,7 +159,6 @@
     <ClCompile Include="matmul.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="dirent.h" />
     <ClInclude Include="matmul.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
