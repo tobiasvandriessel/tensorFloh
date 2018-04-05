@@ -294,13 +294,17 @@ int extractFeaturesFromVideo(string path) {
 
 	calcOpticalFlowFarneback(prevGray, nextGray, flow, 0.5, 3, 15, 3, 5, 1.1, 0);//, status, error);
 
-	/*Mat cflow;
-	cvtColor(prevGray, cflow, CV_GRAY2BGR);
-	drawOptFlowMap(flow, cflow, 10, CV_RGB(0, 255, 0));*/
+	
+	Mat prevGrayResized, nextGrayResized;
+	resize(prevGray, prevGrayResized, Size(120, 120), 0, 0, INTER_AREA);
+	resize(nextGray, nextGrayResized, Size(120, 120), 0, 0, INTER_AREA);
 
 	Mat outputFlow;
 	doMaxKernelVector(flow, outputFlow, 2);
 	
+	Mat cflow;
+	cvtColor(prevGrayResized, cflow, CV_GRAY2BGR);
+	drawOptFlowMap(outputFlow, cflow, 5, CV_RGB(0, 255, 0));
 
 	/*for (int i = 0; i < length; i++) {
 		if (status[i] == 0) continue;
@@ -315,8 +319,8 @@ int extractFeaturesFromVideo(string path) {
 
 
 
-	/*imshow("windows23", cflow);
-	waitKey(500);*/
+	imshow("windows23", cflow);
+	waitKey(500);
 	
 	return 0;
 }
