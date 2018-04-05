@@ -233,7 +233,7 @@ int extractFeaturesFromVideo(string path) {
 	auto m_video = VideoCapture(path);
 	assert(m_video.isOpened());
 
-	cout << "read video" << endl;
+	//cout << "read video" << endl;
 
 	//// Assess the image size
 	//m_plane_size.width = (int)m_video.get(CV_CAP_PROP_FRAME_WIDTH);
@@ -243,7 +243,7 @@ int extractFeaturesFromVideo(string path) {
 	// Get the amount of video frames
 	m_video.set(CV_CAP_PROP_POS_AVI_RATIO, 1);  // Go to the end of the video; 1 = 100%
 	long m_frame_amount = (long)m_video.get(CV_CAP_PROP_POS_FRAMES);
-	cout << "Frames: " << m_frame_amount;
+	//cout << "Frames: " << m_frame_amount;
 	assert(m_frame_amount > 1);
 
 	m_video.set(CV_CAP_PROP_POS_AVI_RATIO, 0);  // Go back to the start
@@ -265,8 +265,8 @@ int extractFeaturesFromVideo(string path) {
 
 	//cvShowImage("windows", &m_frame);
 	/*imshow("windows", m_frame);*/
-	imshow("windows1", prevFrame);
-	waitKey(1);
+	//imshow("windows1", prevFrame);
+	//waitKey(1);
 
 	m_video >> nextFrame;
 
@@ -276,12 +276,12 @@ int extractFeaturesFromVideo(string path) {
 	GaussianBlur(prevFrame, prevFrame, Size(5, 5), 1.0, 1.0);
 	GaussianBlur(nextFrame, nextFrame, Size(5, 5), 1.0, 1.0);
 
-	waitKey(500);
+	//waitKey(500);
 
 	imshow("windows23", prevFrame);
 	waitKey(1);
 
-	waitKey(500);
+	//waitKey(500);
 
 	Mat prevGray, nextGray;
 	cvtColor(prevFrame, prevGray, CV_BGR2GRAY);
@@ -306,6 +306,21 @@ int extractFeaturesFromVideo(string path) {
 	cvtColor(prevGrayResized, cflow, CV_GRAY2BGR);
 	drawOptFlowMap(outputFlow, cflow, 5, CV_RGB(0, 255, 0));
 
+	std::string flowfilepath = path.substr(0, path.length() - 4);
+	flowfilepath += "_flow.csv";
+	std::string imgfilepath = path.substr(0, path.length() - 4);
+	imgfilepath += "_img.csv";
+
+	/*cout << "filepath: " << filepath << endl;
+	cout << "path: " << path << endl;*/
+	FileStorage fs(flowfilepath, FileStorage::WRITE);
+	fs << "optical flow" << outputFlow;
+	fs.release();
+
+	FileStorage fs1(imgfilepath, FileStorage::WRITE);
+	fs1 << "img" << prevGrayResized;
+	fs1.release();
+
 	/*for (int i = 0; i < length; i++) {
 		if (status[i] == 0) continue;
 
@@ -319,8 +334,8 @@ int extractFeaturesFromVideo(string path) {
 
 
 
-	imshow("windows23", cflow);
-	waitKey(500);
+	//imshow("windows23", cflow);
+	//waitKey(500);
 	
 	return 0;
 }
