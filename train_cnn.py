@@ -21,7 +21,7 @@ def cnn_model_fn(features, labels, mode):
     # Input Layer
     input_layer = tf.reshape(features["x"], [-1, 120, 120, 3])
 
-
+    
     #I don't think our first layer needs this big kernel size, probably too big for our input size. Maybe 5 is enough
     conv1 = tf.layers.conv2d(
     inputs=input_layer,
@@ -119,6 +119,13 @@ def cnn_model_fn(features, labels, mode):
 
     eval_metric_ops = {
         "accuracy": tf.metrics.accuracy(
+            labels=labels, predictions=predictions["classes"]
+            
+        ) ,
+        "recall": tf.metrics.recall(
+            labels=labels, predictions=predictions["classes"]
+        ) ,
+        "precision": tf.metrics.precision(
             labels=labels, predictions=predictions["classes"]
         )
     }
