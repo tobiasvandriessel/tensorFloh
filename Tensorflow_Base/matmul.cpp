@@ -165,6 +165,10 @@ GraphDef CreateGraphDef()
 {
     Scope root = Scope::NewRootScope();
 
+	//ops::Conv2D()
+	//ops::MaxPool()
+	//ops::LRN()
+
     auto X = ops::Placeholder(root.WithOpName("x"), DT_FLOAT,
         ops::Placeholder::Shape({ -1, 2 }));
     auto A = ops::Const(root, { { 3.f, 2.f },{ -1.f, 0.f } });
@@ -302,9 +306,9 @@ int extractFeaturesFromVideo(string path) {
 	Mat outputFlow;
 	doMaxKernelVector(flow, outputFlow, 2);
 	
-	Mat cflow;
+	/*Mat cflow;
 	cvtColor(prevGrayResized, cflow, CV_GRAY2BGR);
-	drawOptFlowMap(outputFlow, cflow, 5, CV_RGB(0, 255, 0));
+	drawOptFlowMap(outputFlow, cflow, 5, CV_RGB(0, 255, 0));*/
 
 	std::string flowfilepath = path.substr(0, path.length() - 4);
 	flowfilepath += "_flow.csv";
@@ -317,8 +321,10 @@ int extractFeaturesFromVideo(string path) {
 	fs << "optical flow" << outputFlow;
 	fs.release();
 
+	resize(prevFrame, prevFrame, Size(120, 120), 0, 0, INTER_AREA);
+
 	FileStorage fs1(imgfilepath, FileStorage::WRITE);
-	fs1 << "img" << prevGrayResized;
+	fs1 << "img" << prevFrame;
 	fs1.release();
 
 	/*for (int i = 0; i < length; i++) {
