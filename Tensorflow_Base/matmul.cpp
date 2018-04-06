@@ -199,10 +199,9 @@ int handleOfflineStuff() {
 				cout << "Inside loop Entered dir: " << m_data_path + ent->d_name << endl;
 
 				while ((ent1 = readdir(dir1)) != NULL) {
-					if (strcmp(ent1->d_name, ".") == 0 || strcmp(ent1->d_name, "..") == 0)
+					if (strcmp(ent1->d_name, ".") == 0 || strcmp(ent1->d_name, "..") == 0 || strcmp(strrchr(ent1->d_name, '.'), ".csv") == 0)
 						continue;
 
-					
 
 
 
