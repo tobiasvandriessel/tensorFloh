@@ -22,10 +22,7 @@ num_channels = 3
 train_path='data/UCF-101/folds'
 
 
-# Our application logic will be added here
 
-if __name__ == "__main__":
-  tf.app.run()
 
 
 # About learning rate: The learning rate is initially set to 10e−2, and then decreased according to a fixed schedule, 
@@ -202,3 +199,10 @@ def main(unused_argv):
 
     eval_results = classifier.evaluate(input_fn=eval_input_fn)
     print(eval_results)
+
+
+
+# Our application logic will be added here
+
+if __name__ == "__main__":
+  tf.app.run()

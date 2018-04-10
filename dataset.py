@@ -24,7 +24,7 @@ def load_train_fold_img(train_path, fold, length):
     #index = fold - 1 (folds = {1,2,3,4,5})
     #index = fold - 1
     print('Now going to read files from fold {}'.format(fold))
-    path = os.path.join(train_path, fold, '*g')
+    path = os.path.join(train_path, str(fold), '*g')
     files = glob.glob(path)
     for fl in files:
         name, ext = os.path.splitext(os.path.basename(fl))
@@ -61,7 +61,7 @@ def load_train_fold_flow(train_path, fold, length):
     #index = fold - 1 (folds = {1,2,3,4,5})
     # index = fold - 1
     print('Now going to read files from fold {}'.format(fold))
-    path = os.path.join(train_path, fold, '*g')
+    path = os.path.join(train_path, str(fold), '*g')
     files = glob.glob(path)
     for fl in files:
         name, ext = os.path.splitext(os.path.basename(fl))
@@ -150,10 +150,15 @@ def read_train_sets(train_path, validation_num, read_flow):
     pass
   data_sets = DataSets()
 
-  train_images = np.array()
-  train_labels = np.array()
-  train_img_names = np.array()
-  train_cls = np.array()
+  # train_images = np.empty(0)
+  # train_labels = np.empty(0)
+  # train_img_names = np.empty(0)
+  # train_cls = np.empty(0)
+
+  images_array = []
+  labels_array = []
+  img_names_array = []
+  cls_array = []
 
 
   for i in range(1, 6):
@@ -165,10 +170,16 @@ def read_train_sets(train_path, validation_num, read_flow):
     else:
       images, labels, img_names, cls = load_train_fold_flow(train_path, i, 5)
 
-    np.concatenate(train_images, images)
-    np.concatenate(train_labels, labels)
-    np.concatenate(train_img_names, img_names)
-    np.concatenate(train_cls, cls)
+    images_array.append(images)
+    labels_array.append(labels)
+    img_names_array.append(img_names)
+    cls_array.append(cls)
+
+
+  train_images = np.concatenate((images_array[0], images_array[1], images_array[2], images_array[3]))
+  train_labels = np.concatenate((labels_array[0], labels_array[1], labels_array[2], labels_array[3]))
+  train_img_names = np.concatenate((img_names_array[0], img_names_array[1], img_names_array[2], img_names_array[3]))
+  train_cls = np.concatenate((cls_array[0], cls_array[1], cls_array[2], cls_array[3]))
     
   if not read_flow:
     validation_images, validation_labels, validation_img_names, validation_cls = load_train_fold_img(train_path, validation_num, 5)
