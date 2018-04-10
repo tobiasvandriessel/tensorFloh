@@ -174,9 +174,12 @@ def main(unused_argv):
         tensors=tensors_to_log, every_n_iter=50
     )
 
+    # print("shape of images: ")
+    # print(data.train.images.shape)
+
 
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x", data.train.images},
+        x={"x": data.train.images},
         y=data.train.labels,
         batch_size=100,
         num_epochs=None,
@@ -191,7 +194,7 @@ def main(unused_argv):
 
     # Evaluate the model and print results
     eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x", data.valid.images},
+        x={"x": data.valid.images},
         y=data.valid.labels,
         num_epochs=1,
         shuffle=False
