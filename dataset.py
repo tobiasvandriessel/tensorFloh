@@ -5,7 +5,7 @@ import glob
 import numpy as np
 
 
-def load_train_fold(train_path, folds, load_flow):
+def load_train_fold_img(train_path, folds):
     images = []
     labels = []
     img_names = []
@@ -18,16 +18,51 @@ def load_train_fold(train_path, folds, load_flow):
         path = os.path.join(train_path, num, '*g')
         files = glob.glob(path)
         for fl in files:
-            name, ext = os.path.splitext(os.path.basename(fl))
-            #Don't read the video
-            if ext == ".avi":
+            _, ext = os.path.splitext(os.path.basename(fl))
+            #Don't read the videos or flow files
+            if ext == ".avi" or ext == ".flo":
               continue
-            #If we want to load the flow files, stop when the name ends with "img"
-            if load_flow and name[-1:] == 'g':
+
+            image = cv2.imread(fl)
+            #image = cv2.resize(image, (image_size, image_size),0,0, cv2.INTER_LINEAR)
+            image = image.astype(np.float32)
+            image = np.multiply(image, 1.0 / 255.0)
+            images.append(image)
+            label = np.zeros(len(folds))
+            label[index] = 1.0
+            labels.append(label)
+            flbase = os.path.basename(fl)
+            img_names.append(flbase)
+            cls.append(num)
+    images = np.array(images)
+    labels = np.array(labels)
+    img_names = np.array(img_names)
+    cls = np.array(cls)
+
+    return images, labels, img_names, cls
+
+def load_train_fold_flow(train_path, folds):
+    images = []
+    labels = []
+    img_names = []
+    cls = []
+
+    print('Going to read training images')
+    for num in folds:   
+        index = folds.index(num)
+        print('Now going to read {} files (Index: {})'.format(num, index))
+        path = os.path.join(train_path, num, '*g')
+        files = glob.glob(path)
+        for fl in files:
+            _, ext = os.path.splitext(os.path.basename(fl))
+            #Don't read the videos or jpg files
+            if ext == ".avi" or ext == ".jpg":
               continue
-            #If we want to load the img files, stop when the name ends with "flow"              
-            if not load_flow and name[-1:] == 'w':
-              continue
+
+            #TODO
+            flow = cv2.optflow.readOpticalFlow(fl)
+            images.append
+
 
             image = cv2.imread(fl)
             #image = cv2.resize(image, (image_size, image_size),0,0, cv2.INTER_LINEAR)
