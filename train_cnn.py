@@ -1,8 +1,25 @@
 # Imports
 import numpy as np
 import tensorflow as tf
+import dataset
+
+from numpy.random import seed
+seed(1)
+from tensorflow import set_random_seed
+set_random_seed(2)
 
 tf.logging.set_verbosity(tf.logging.INFO)
+
+#Prepare input data
+# classes = ['dogs','cats']
+class_list = [ "Brushing", "Cutting", "Jumping", "Lunges", "Wall" ]
+num_classes = len(class_list)
+
+# 20% of the data will automatically be used for validation
+validation_size = 0.2
+img_size = 120
+num_channels = 3
+train_path='data/UCF-101/folds'
 
 
 # Our application logic will be added here
@@ -130,11 +147,25 @@ def cnn_model_fn(features, labels, mode):
 def main(unused_argv):
     # TODO
     # Load training and eval data
-    mnist = tf.contrib.learn.datasets.load_dataset("mnist")
-    train_data = mnist.train.images # Returns np.array
-    train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
-    eval_data = mnist.test.images # Returns np.array
-    eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
+    # mnist = tf.contrib.learn.datasets.load_dataset("mnist")
+    # train_data = mnist.train.images # Returns np.array
+    # train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
+    # eval_data = mnist.test.images # Returns np.array
+    # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
+
+
+
+
+    # We shall load all the training and validation images and labels into memory using openCV and use that during training
+    #TODO we need to do cross validation
+    data = dataset.read_train_sets(train_path, np.random.randint(0, 5), False)
+
+
+    print("Complete reading input data. Will Now print a snippet of it")
+    print("Number of files in Training-set:\t\t{}".format(len(data.train.labels)))
+    print("Number of files in Validation-set:\t{}".format(len(data.valid.labels)))
+
+
 
     # Create the estimator
     classifier = tf.estimator.Estimator(
@@ -148,8 +179,8 @@ def main(unused_argv):
 
 
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x", train_data},
-        y=train_labels,
+        x={"x", data.train.images},
+        y=data.train.labels,
         batch_size=100,
         num_epochs=None,
         shuffle=True
@@ -163,8 +194,8 @@ def main(unused_argv):
 
     # Evaluate the model and print results
     eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x", eval_data},
-        y=eval_labels,
+        x={"x", data.valid.images},
+        y=data.valid.labels,
         num_epochs=1,
         shuffle=False
     )
