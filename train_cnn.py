@@ -38,55 +38,56 @@ def cnn_model_fn(features, labels, mode):
 
     #I don't think our first layer needs this big kernel size, probably too big for our input size. Maybe 5 is enough
     conv1 = tf.layers.conv2d(
-    inputs=input_layer,
-    filters=96,
-    kernel_size=[7, 7],
-    padding="same",
-    activation=tf.nn.relu,
-    strides=(2,2))
+        inputs=input_layer,
+        filters=96,
+        kernel_size=[7, 7],
+        strides=(2,2),
+        padding="same",
+        activation=tf.nn.relu)
 
     norm1 = tf.nn.lrn(conv1, 5, 2, 0.0001, 0.75)
 
-    pool1 = tf.layers.MaxPooling2D(inputs=norm1, pool_size=[3,3], strides=2)
+    
+    pool1 = tf.layers.max_pooling2d(inputs=norm1, pool_size=[3,3], strides=2)
 
 
     conv2 = tf.layers.conv2d(
-    inputs=pool1,
-    filters=256,
-    kernel_size=[5, 5],
-    padding="same",
-    activation=tf.nn.relu,
-    strides=(2,2))
+        inputs=pool1,
+        filters=256,
+        kernel_size=[5, 5],
+        strides=(2,2),
+        padding="same",
+        activation=tf.nn.relu)
 
     norm2 = tf.nn.lrn(conv2, 5, 2, 0.0001, 0.75)
 
-    pool2 = tf.layers.MaxPooling2D(inputs=norm2, pool_size=[3,3], strides=2)
+    pool2 = tf.layers.max_pooling2d(inputs=norm2, pool_size=[3,3], strides=2)
 
 
     conv3 = tf.layers.conv2d(
-    inputs=pool2,
-    filters=512,
-    kernel_size=[3, 3],
-    padding="same",
-    activation=tf.nn.relu)
+        inputs=pool2,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
 
 
     conv4 = tf.layers.conv2d(
-    inputs=conv3,
-    filters=512,
-    kernel_size=[3, 3],
-    padding="same",
-    activation=tf.nn.relu)
+        inputs=conv3,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
 
     conv5 = tf.layers.conv2d(
-    inputs=conv4,
-    filters=512,
-    kernel_size=[3, 3],
-    padding="same",
-    activation=tf.nn.relu)
+        inputs=conv4,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
 
 
-    pool3 = tf.layers.MaxPooling2D(inputs=conv5, pool_size=[3,3], strides=2)
+    pool3 = tf.layers.max_pooling2d(inputs=conv5, pool_size=[3,3], strides=2)
 
     pool3_flat = tf.reshape(pool3, [-1, 15 * 15 * 512])
 
