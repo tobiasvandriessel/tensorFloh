@@ -135,7 +135,7 @@ class DataSet(object):
     return self._images[start:end], self._labels[start:end], self._img_names[start:end], self._cls[start:end]
 
 
-def read_train_sets(train_path, image_size, classes, validation_num):
+def read_train_sets(train_path, image_size, classes, validation_num, read_flow):
   class DataSets(object):
     pass
   data_sets = DataSets()
@@ -150,14 +150,20 @@ def read_train_sets(train_path, image_size, classes, validation_num):
     if i == validation_num:
       continue
     
-    images, labels, img_names, cls = load_train_fold_img(train_path, i, 5)
+    if not read_flow:
+      images, labels, img_names, cls = load_train_fold_img(train_path, i, 5)
+    else:
+      images, labels, img_names, cls = load_train_fold_flow(train_path, i, 5)
 
     np.concatenate(train_images, images)
     np.concatenate(train_labels, labels)
     np.concatenate(train_img_names, img_names)
     np.concatenate(train_cls, cls)
     
-  validation_images, validation_labels, validation_img_names, validation_cls = load_train_fold_img(train_path, validation_num, 5)
+  if not read_flow:
+    validation_images, validation_labels, validation_img_names, validation_cls = load_train_fold_img(train_path, validation_num, 5)
+  else:
+    validation_images, validation_labels, validation_img_names, validation_cls = load_train_fold_flow(train_path, validation_num, 5)
 
 
   # images, labels, img_names, cls = load_train_fold_img(train_path, classes, 5)
