@@ -4,6 +4,16 @@ import glob
 #from sklearn.utils import shuffle
 import numpy as np
 
+class_map_num = {
+  "B" : 0,
+  "C" : 1,
+  "J" : 2,
+  "L" : 3,
+  "W" : 4
+}
+
+class_list = [ "Brushing", "Cutting", "Jumping", "Lunges", "Wall" ]
+
 
 def load_train_fold_img(train_path, fold, length):
     images = []
@@ -11,14 +21,14 @@ def load_train_fold_img(train_path, fold, length):
     img_names = []
     cls = []
 
-    print('Going to read training images from fold ' + fold)
     #index = fold - 1 (folds = {1,2,3,4,5})
-    index = fold - 1
-    print('Now going to read {} files (Index: {})'.format(fold, index))
+    #index = fold - 1
+    print('Now going to read files from fold {}'.format(fold))
     path = os.path.join(train_path, fold, '*g')
     files = glob.glob(path)
     for fl in files:
-        _, ext = os.path.splitext(os.path.basename(fl))
+        name, ext = os.path.splitext(os.path.basename(fl))
+        num = class_map_num.get(name[2:3])
         #Don't read the videos or flow files
         if ext == ".avi" or ext == ".flo":
           continue
@@ -29,11 +39,11 @@ def load_train_fold_img(train_path, fold, length):
         image = np.multiply(image, 1.0 / 255.0)
         images.append(image)
         label = np.zeros(length)
-        label[index] = 1.0
+        label[num] = 1.0
         labels.append(label)
         flbase = os.path.basename(fl)
         img_names.append(flbase)
-        cls.append(fold)
+        cls.append(class_list[num])
     images = np.array(images)
     labels = np.array(labels)
     img_names = np.array(img_names)
@@ -47,19 +57,19 @@ def load_train_fold_flow(train_path, fold, length):
     img_names = []
     cls = []
 
-    print('Going to read training images from fold ' + fold)
+    # print('Going to read training images from fold ' + fold)
     #index = fold - 1 (folds = {1,2,3,4,5})
-    index = fold - 1
-    print('Now going to read {} files (Index: {})'.format(fold, index))
+    # index = fold - 1
+    print('Now going to read files from fold {}'.format(fold))
     path = os.path.join(train_path, fold, '*g')
     files = glob.glob(path)
     for fl in files:
-        _, ext = os.path.splitext(os.path.basename(fl))
+        name, ext = os.path.splitext(os.path.basename(fl))
+        num = class_map_num.get(name[2:3])        
         #Don't read the videos or jpg files
         if ext == ".avi" or ext == ".jpg":
           continue
 
-        #TODO
         flow = cv2.optflow.readOpticalFlow(fl)
         flows.append(flow)
 
@@ -70,11 +80,11 @@ def load_train_fold_flow(train_path, fold, length):
         # image = np.multiply(image, 1.0 / 255.0)
         # images.append(image)
         label = np.zeros(length)
-        label[index] = 1.0
+        label[num] = 1.0
         labels.append(label)
         flbase = os.path.basename(fl)
         img_names.append(flbase)
-        cls.append(fold)
+        cls.append(class_list[num])
     flows = np.array(flows)
     labels = np.array(labels)
     img_names = np.array(img_names)
