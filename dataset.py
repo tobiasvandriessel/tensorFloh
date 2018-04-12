@@ -38,9 +38,9 @@ def load_train_fold_img(train_path, fold, length):
         image = image.astype(np.float32)
         image = np.multiply(image, 1.0 / 255.0)
         images.append(image)
-        label = np.zeros(length)
-        label[num] = 1.0
-        labels.append(label)
+        # label = np.zeros(length)
+        # label[num] = 1.0
+        labels.append(num)
         flbase = os.path.basename(fl)
         img_names.append(flbase)
         cls.append(class_list[num])
@@ -79,9 +79,9 @@ def load_train_fold_flow(train_path, fold, length):
         # image = image.astype(np.float32)
         # image = np.multiply(image, 1.0 / 255.0)
         # images.append(image)
-        label = np.zeros(length)
-        label[num] = 1.0
-        labels.append(label)
+        # label = np.zeros(length)
+        # label[num] = 1.0
+        labels.append(num)
         flbase = os.path.basename(fl)
         img_names.append(flbase)
         cls.append(class_list[num])

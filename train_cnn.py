@@ -121,7 +121,7 @@ def cnn_model_fn(features, labels, mode):
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
-    # onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
+    onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
     # a = tf.Print(logits, [logits])
     # a.eval()
     # for i in range(0,4):
@@ -131,7 +131,7 @@ def cnn_model_fn(features, labels, mode):
     # print(labels)
     # print(logits)
     loss = tf.losses.softmax_cross_entropy(
-        onehot_labels=labels, logits=logits
+        onehot_labels=onehot_labels, logits=logits
     )
 
 
@@ -201,7 +201,7 @@ def main(unused_argv):
 
     classifier.train(
         input_fn=train_input_fn,
-        steps=20000,
+        steps=5000,
         hooks=[logging_hook]
     )
 
@@ -215,7 +215,6 @@ def main(unused_argv):
 
     eval_results = classifier.evaluate(input_fn=eval_input_fn)
     print(eval_results)
-
 
 
 # Our application logic will be added here
