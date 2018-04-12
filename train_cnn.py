@@ -89,7 +89,9 @@ def cnn_model_fn(features, labels, mode):
 
     pool3 = tf.layers.max_pooling2d(inputs=conv5, pool_size=[3,3], strides=2)
 
-    pool3_flat = tf.reshape(pool3, [-1, 15 * 15 * 512])
+    print(pool3)
+
+    pool3_flat = tf.reshape(pool3, [-1, 6 * 6 * 512])
 
     #Not sure if relu ois the correct activation function, probably in paper
     dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
@@ -107,7 +109,7 @@ def cnn_model_fn(features, labels, mode):
     logits = tf.layers.dense(inputs=dense2, units=5)
 
 
-    
+    print(logits)
 
     predictions= {
         "classes":  tf.argmax(input=logits, axis=1),
@@ -192,7 +194,7 @@ def main(unused_argv):
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": data.train.images},
         y=data.train.labels,
-        batch_size=50,
+        batch_size=10,
         num_epochs=None,
         shuffle=True
     )
