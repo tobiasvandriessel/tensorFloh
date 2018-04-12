@@ -40,28 +40,28 @@ def cnn_model_fn(features, labels, mode):
     conv1 = tf.layers.conv2d(
         inputs=input_layer,
         filters=96,
-        kernel_size=[7, 7],
+        kernel_size=[5, 5],
         strides=(2,2),
-        padding="same",
+        padding="valid",
         activation=tf.nn.relu)
 
-    norm1 = tf.nn.lrn(conv1, 5, 2, 0.0001, 0.75)
+    # norm1 = tf.nn.lrn(conv1, 5, 2, 0.0001, 0.75)
 
     
-    pool1 = tf.layers.max_pooling2d(inputs=norm1, pool_size=[3,3], strides=2)
+    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3,3], strides=2)
 
 
     conv2 = tf.layers.conv2d(
         inputs=pool1,
         filters=256,
-        kernel_size=[5, 5],
-        strides=(2,2),
+        kernel_size=[3, 3],
+        #strides=(2,2),
         padding="same",
         activation=tf.nn.relu)
 
-    norm2 = tf.nn.lrn(conv2, 5, 2, 0.0001, 0.75)
+    # norm2 = tf.nn.lrn(conv2, 5, 2, 0.0001, 0.75)
 
-    pool2 = tf.layers.max_pooling2d(inputs=norm2, pool_size=[3,3], strides=2)
+    pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[3,3], strides=2)
 
 
     conv3 = tf.layers.conv2d(
@@ -95,16 +95,16 @@ def cnn_model_fn(features, labels, mode):
     dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
     
     #Random rate now, in paper is correct one
-    dropout1 = tf.layers.dropout(inputs=dense1, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+    # dropout1 = tf.layers.dropout(inputs=dense1, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
 
     
     #Not sure if relu ois the correct activation function, probably in paper
-    dense2 = tf.layers.dense(inputs=dropout1, units=2048, activation=tf.nn.relu)
+    dense2 = tf.layers.dense(inputs=dense1, units=2048, activation=tf.nn.relu)
     
     #Random rate now, in paper is correct one
-    dropout2 = tf.layers.dropout(inputs=dense2, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+    # dropout2 = tf.layers.dropout(inputs=dense2, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
 
-    logits = tf.layers.dense(inputs=dropout2, units=5)
+    logits = tf.layers.dense(inputs=dense2, units=5)
 
 
     
@@ -114,12 +114,22 @@ def cnn_model_fn(features, labels, mode):
         "probabilities": tf.nn.softmax(logits, name="softmax_tensor")        
     }
 
+    print(predictions)
+
     if mode == tf.estimator.ModeKeys.PREDICT:
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
-    onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
+    # onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
+    # a = tf.Print(logits, [logits])
+    # a.eval()
+    # for i in range(0,4):
+    #     for j in range(0,5):
+    #         print(logits[i][j])
+        # print(logits[i])
+    # print(labels)
+    # print(logits)
     loss = tf.losses.softmax_cross_entropy(
-        onehot_labels=onehot_labels, logits=logits
+        onehot_labels=labels, logits=logits
     )
 
 
@@ -182,7 +192,7 @@ def main(unused_argv):
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": data.train.images},
         y=data.train.labels,
-        batch_size=100,
+        batch_size=50,
         num_epochs=None,
         shuffle=True
     )
