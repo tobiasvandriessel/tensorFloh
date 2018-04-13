@@ -202,13 +202,13 @@ def main(unused_argv):
         x={"x": data.train.images},
         y=data.train.labels,
         batch_size=16,
-        num_epochs=None,
+        num_epochs=15,
         shuffle=True
     )
 
     classifier.train(
         input_fn=train_input_fn,
-        steps=1000,
+        #steps=1000,
         hooks=[logging_hook]
     )
 
