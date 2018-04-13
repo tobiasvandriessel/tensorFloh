@@ -156,10 +156,10 @@ def cnn_model_fn(features, labels, mode):
         )
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
-        P = tf.metrics.precision(
-            labels=labels, predictions=predictions["classes"])
-        R = tf.metrics.recall(
-            labels=labels, predictions=predictions["classes"])
+    P = tf.metrics.precision(
+        labels=labels, predictions=predictions["classes"])
+    R = tf.metrics.recall(
+        labels=labels, predictions=predictions["classes"])
 
     eval_metric_ops = {
         "accuracy": tf.metrics.accuracy(
@@ -241,24 +241,28 @@ def main(unused_argv):
         print(eval_results)
 
         result_array.append(eval_results)
-
+    fscore = []
     avg_acc = 0.0
     avg_prec = 0.0
     avg_rec = 0.0
+    avg_fscore = 0.0
 
     for i in range(0,5):
         avg_acc += result_array[i].get("accuracy")
         avg_prec += result_array[i].get("precision")
         avg_rec += result_array[i].get("recall")
+        fscore.append(2 * result_array[i].get("recall") *result_array[i].get("precision")/(result_array[i].get("recall") + result_array[i].get("precision")))
+        avg_fscore += fscore[i]
 
     avg_acc /= 5
     avg_prec /= 5
     avg_rec /= 5
+    avg_fscore /= 5
 
     print("avg_acc: " + str(avg_acc))
     print("avg_prec: " + str(avg_prec))
     print("avg_rec: " + str(avg_rec))
-
+    print("avg_fscore: " + str(avg_fscore))
 
 
 
