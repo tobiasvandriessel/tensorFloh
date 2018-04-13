@@ -255,6 +255,10 @@ def main(unused_argv):
     avg_prec /= 5
     avg_rec /= 5
 
+    print("avg_acc: " + str(avg_acc))
+    print("avg_prec: " + str(avg_prec))
+    print("avg_rec: " + str(avg_rec))
+
 
 
 
