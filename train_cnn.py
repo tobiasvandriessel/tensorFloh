@@ -40,7 +40,7 @@ def cnn_model_fn(features, labels, mode):
     conv1 = tf.layers.conv2d(
         inputs=input_layer,
         filters=96,
-        kernel_size=[5, 5],
+        kernel_size=[7, 7],
         strides=(2,2),
         padding="valid",
         activation=tf.nn.relu)
@@ -48,15 +48,15 @@ def cnn_model_fn(features, labels, mode):
     # norm1 = tf.nn.lrn(conv1, 5, 2, 0.0001, 0.75)
 
     
-    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3,3], strides=2)
+    #pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3,3], strides=2)
 
 
     conv2 = tf.layers.conv2d(
-        inputs=pool1,
+        inputs=conv1,
         filters=256,
-        kernel_size=[3, 3],
+        kernel_size=[5, 5],
         #strides=(2,2),
-        padding="same",
+        padding="valid",
         activation=tf.nn.relu)
 
     # norm2 = tf.nn.lrn(conv2, 5, 2, 0.0001, 0.75)
@@ -89,22 +89,22 @@ def cnn_model_fn(features, labels, mode):
 
     pool3 = tf.layers.max_pooling2d(inputs=conv5, pool_size=[3,3], strides=2)
 
-    #print(pool3)
+    print(pool3) #//[batch, 6, 6, 512]
 
-    pool3_flat = tf.reshape(pool3, [-1, 6 * 6 * 512])
+    pool3_flat = tf.reshape(pool3, [-1, 12 * 12 * 512])
 
     #Not sure if relu ois the correct activation function, probably in paper
     dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
     
     #Random rate now, in paper is correct one
-    dropout1 = tf.layers.dropout(inputs=dense1, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+    dropout1 = tf.layers.dropout(inputs=dense1, rate=0.9, training=mode == tf.estimator.ModeKeys.TRAIN)
 
     
     #Not sure if relu ois the correct activation function, probably in paper
     dense2 = tf.layers.dense(inputs=dropout1, units=2048, activation=tf.nn.relu)
     
     #Random rate now, in paper is correct one
-    dropout2 = tf.layers.dropout(inputs=dense2, rate=0.4, training=mode == tf.estimator.ModeKeys.TRAIN)
+    dropout2 = tf.layers.dropout(inputs=dense2, rate=0.9, training=mode == tf.estimator.ModeKeys.TRAIN)
 
     logits = tf.layers.dense(inputs=dropout2, units=5)
 
