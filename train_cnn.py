@@ -36,14 +36,146 @@ def eval_confusion_matrix(labels, predictions):
 
         return tf.convert_to_tensor(con_matrix_sum), update_op
 
+def cnn_model_fn_old(features, labels, mode, params):
+    """Model function for CNN."""
+    # Input Layer
+    input_layer = tf.reshape(features["x"], [-1, 120, 120, 3])
 
+    
+    #I don't think our first layer needs this big kernel size, probably too big for our input size. Maybe 5 is enough
+    conv1 = tf.layers.conv2d(
+        inputs=input_layer,
+        filters=96,
+        kernel_size=[5, 5],
+        strides=(2,2),
+        padding="valid",
+        activation=tf.nn.relu)
+
+    # norm1 = tf.nn.lrn(conv1, 5, 2, 0.0001, 0.75)
+
+    
+    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3,3], strides=2)
+
+
+    conv2 = tf.layers.conv2d(
+        inputs=pool1,
+        filters=256,
+        kernel_size=[3, 3],
+        #strides=(2,2),
+        padding="same",
+        activation=tf.nn.relu)
+
+    # norm2 = tf.nn.lrn(conv2, 5, 2, 0.0001, 0.75)
+
+    pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[3,3], strides=2)
+
+
+    conv3 = tf.layers.conv2d(
+        inputs=pool2,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
+
+
+    conv4 = tf.layers.conv2d(
+        inputs=conv3,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
+
+    conv5 = tf.layers.conv2d(
+        inputs=conv4,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
+
+
+    pool3 = tf.layers.max_pooling2d(inputs=conv5, pool_size=[3,3], strides=2)
+
+    print(pool3) #//[batch, 6, 6, 512]
+
+    pool3_flat = tf.reshape(pool3, [-1, 12 * 12 * 512])
+
+    #Not sure if relu ois the correct activation function, probably in paper
+    dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
+    
+    #Random rate now, in paper is correct one
+    dropout1 = tf.layers.dropout(inputs=dense1, rate=params['dropout_rate'], training=mode == tf.estimator.ModeKeys.TRAIN)
+
+    
+    #Not sure if relu ois the correct activation function, probably in paper
+    dense2 = tf.layers.dense(inputs=dropout1, units=2048, activation=tf.nn.relu)
+    
+    #Random rate now, in paper is correct one
+    dropout2 = tf.layers.dropout(inputs=dense2, rate=params['dropout_rate'], training=mode == tf.estimator.ModeKeys.TRAIN)
+
+    logits = tf.layers.dense(inputs=dropout2, units=5)
+
+
+    print(logits)
+
+    predictions= {
+        "classes":  tf.argmax(input=logits, axis=1),
+        "probabilities": tf.nn.softmax(logits, name="softmax_tensor")        
+    }
+
+    print(predictions)
+
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+
+    onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
+    # a = tf.Print(logits, [logits])
+    # a.eval()
+    # for i in range(0,4):
+    #     for j in range(0,5):
+    #         print(logits[i][j])
+        # print(logits[i])
+    # print(labels)
+    # print(logits)
+    loss = tf.losses.softmax_cross_entropy(
+        onehot_labels=onehot_labels, logits=logits
+    )
+
+
+    if mode == tf.estimator.ModeKeys.TRAIN:
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01) #This changes over the iterations
+        train_op = optimizer.minimize(
+            loss=loss,
+            global_step=tf.train.get_global_step()
+        )
+        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+
+        P = tf.metrics.precision(
+            labels=labels, predictions=predictions["classes"])
+        R = tf.metrics.recall(
+            labels=labels, predictions=predictions["classes"])
+
+    eval_metric_ops = {
+        "accuracy": tf.metrics.accuracy(
+            labels=labels, predictions=predictions["classes"]
+            
+        ) ,
+        "recall": R 
+        ,
+        "precision": P
+        ,
+        "confusion_matrix": eval_confusion_matrix(labels=labels, predictions=predictions["classes"])
+    }
+
+    return tf.estimator.EstimatorSpec(
+        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops
+    )
 
 # About learning rate: The learning rate is initially set to 10e−2, and then decreased according to a fixed schedule, 
 #  which is kept the same for all training sets. Namely, when training a ConvNet from scratch, the rate is changed to 10e−3 
 #  after 50K iterations, then to 10e−4 after 70K iterations, and training is stopped after 80K iterations. 
 #  In the fine-tuning scenario, the rate is changed to 10e−3 after 14K iterations, and training stopped after 20K iterations.
 
-def cnn_model_fn(features, labels, mode):
+def cnn_model_fn_new(features, labels, mode, params):
     """Model function for CNN."""
     # Input Layer
     input_layer = tf.reshape(features["x"], [-1, 120, 120, 3])
@@ -110,14 +242,14 @@ def cnn_model_fn(features, labels, mode):
     dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
     
     #Random rate now, in paper is correct one
-    dropout1 = tf.layers.dropout(inputs=dense1, rate=0.9, training=mode == tf.estimator.ModeKeys.TRAIN)
+    dropout1 = tf.layers.dropout(inputs=dense1, rate=params['dropout_rate'], training=mode == tf.estimator.ModeKeys.TRAIN)
 
     
     #Not sure if relu ois the correct activation function, probably in paper
     dense2 = tf.layers.dense(inputs=dropout1, units=2048, activation=tf.nn.relu)
     
     #Random rate now, in paper is correct one
-    dropout2 = tf.layers.dropout(inputs=dense2, rate=0.9, training=mode == tf.estimator.ModeKeys.TRAIN)
+    dropout2 = tf.layers.dropout(inputs=dense2, rate=params['dropout_rate'], training=mode == tf.estimator.ModeKeys.TRAIN)
 
     logits = tf.layers.dense(inputs=dropout2, units=5)
 
@@ -177,17 +309,144 @@ def cnn_model_fn(features, labels, mode):
         mode=mode, loss=loss, eval_metric_ops=eval_metric_ops
     )
 
-def main(unused_argv):
-    # TODO
-    # Load training and eval data
-    # mnist = tf.contrib.learn.datasets.load_dataset("mnist")
-    # train_data = mnist.train.images # Returns np.array
-    # train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
-    # eval_data = mnist.test.images # Returns np.array
-    # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
+def cnn_model_fn_newnew(features, labels, mode, params):
+    """Model function for CNN."""
+    # Input Layer
+    input_layer = tf.reshape(features["x"], [-1, 120, 120, 3])
+
+    
+    #I don't think our first layer needs this big kernel size, probably too big for our input size. Maybe 5 is enough
+    conv1 = tf.layers.conv2d(
+        inputs=input_layer,
+        filters=96,
+        kernel_size=[7, 7],
+        strides=(2,2),
+        padding="valid",
+        activation=tf.nn.relu)
+
+    # norm1 = tf.nn.lrn(conv1, 5, 2, 0.0001, 0.75)
+
+    
+    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3,3], strides=2)
+
+
+    conv2 = tf.layers.conv2d(
+        inputs=pool1,
+        filters=256,
+        kernel_size=[5, 5],
+        strides=(2,2),
+        padding="valid",
+        activation=tf.nn.relu)
+
+    # norm2 = tf.nn.lrn(conv2, 5, 2, 0.0001, 0.75)
+
+    #pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[3,3], strides=2)
+
+
+    conv3 = tf.layers.conv2d(
+        inputs=conv2,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
+
+
+    conv4 = tf.layers.conv2d(
+        inputs=conv3,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
+
+    conv5 = tf.layers.conv2d(
+        inputs=conv4,
+        filters=512,
+        kernel_size=[3, 3],
+        padding="same",
+        activation=tf.nn.relu)
+
+
+    pool3 = tf.layers.max_pooling2d(inputs=conv5, pool_size=[3,3], strides=2)
+
+    print(pool3) #//[batch, 6, 6, 512]
+
+    pool3_flat = tf.reshape(pool3, [-1, 12 * 12 * 512])
+
+    #Not sure if relu ois the correct activation function, probably in paper
+    dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
+    
+    #Random rate now, in paper is correct one
+    dropout1 = tf.layers.dropout(inputs=dense1, rate=params['dropout_rate'], training=mode == tf.estimator.ModeKeys.TRAIN)
+
+    
+    #Not sure if relu ois the correct activation function, probably in paper
+    dense2 = tf.layers.dense(inputs=dropout1, units=2048, activation=tf.nn.relu)
+    
+    #Random rate now, in paper is correct one
+    dropout2 = tf.layers.dropout(inputs=dense2, rate=params['dropout_rate'], training=mode == tf.estimator.ModeKeys.TRAIN)
+
+    logits = tf.layers.dense(inputs=dropout2, units=5)
+
+
+    print(logits)
+
+    predictions= {
+        "classes":  tf.argmax(input=logits, axis=1),
+        "probabilities": tf.nn.softmax(logits, name="softmax_tensor")        
+    }
+
+    print(predictions)
+
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+
+    onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
+    # a = tf.Print(logits, [logits])
+    # a.eval()
+    # for i in range(0,4):
+    #     for j in range(0,5):
+    #         print(logits[i][j])
+        # print(logits[i])
+    # print(labels)
+    # print(logits)
+    loss = tf.losses.softmax_cross_entropy(
+        onehot_labels=onehot_labels, logits=logits
+    )
+
+
+    if mode == tf.estimator.ModeKeys.TRAIN:
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01) #This changes over the iterations
+        train_op = optimizer.minimize(
+            loss=loss,
+            global_step=tf.train.get_global_step()
+        )
+        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+
+        P = tf.metrics.precision(
+            labels=labels, predictions=predictions["classes"])
+        R = tf.metrics.recall(
+            labels=labels, predictions=predictions["classes"])
+
+    eval_metric_ops = {
+        "accuracy": tf.metrics.accuracy(
+            labels=labels, predictions=predictions["classes"]
+            
+        ) ,
+        "recall": R 
+        ,
+        "precision": P
+        ,
+        "confusion_matrix": eval_confusion_matrix(labels=labels, predictions=predictions["classes"])
+    }
+
+    return tf.estimator.EstimatorSpec(
+        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops
+    )
+
+def run_model(model, dropout_rate, num_epochs, f):
 
     result_array = []
-
+    
     for i in range(1,6):
 
         # We shall load all the training and validation images and labels into memory using openCV and use that during training
@@ -195,16 +454,34 @@ def main(unused_argv):
         data = dataset.read_train_sets(train_path, i, False)
 
 
-        print("Complete reading input data. Will Now print a snippet of it")
-        print("Number of files in Training-set:\t\t{}".format(len(data.train.labels)))
-        print("Number of files in Validation-set:\t{}".format(len(data.valid.labels)))
+        # print("Complete reading input data. Will Now print a snippet of it")
+        # print("Number of files in Training-set:\t\t{}".format(len(data.train.labels)))
+        # print("Number of files in Validation-set:\t{}".format(len(data.valid.labels)))
 
+        classifier = None
 
-
-        # Create the estimator
-        classifier = tf.estimator.Estimator(
-            model_fn=cnn_model_fn
-        )
+        # Create the estimator        
+        if model == 0:
+            classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_old,
+                params={
+                    'dropout_rate': dropout_rate
+                }
+            )
+        elif model == 1:
+            classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_new,
+                params={
+                    'dropout_rate': dropout_rate
+                }
+            )
+        else:
+            classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_newnew,
+                params={
+                    'dropout_rate': dropout_rate
+                }
+            )
 
         tensors_to_log = {"probabilities": "softmax_tensor"}
         logging_hook = tf.train.LoggingTensorHook(
@@ -219,7 +496,7 @@ def main(unused_argv):
             x={"x": data.train.images},
             y=data.train.labels,
             batch_size=16,
-            num_epochs=1,
+            num_epochs=num_epochs,
             shuffle=True
         )
 
@@ -238,29 +515,56 @@ def main(unused_argv):
         )
 
         eval_results = classifier.evaluate(input_fn=eval_input_fn)
-        print(eval_results)
+        f.write(eval_results)
 
         result_array.append(eval_results)
 
-    avg_acc = 0.0
-    avg_prec = 0.0
-    avg_rec = 0.0
+    return result_array
 
-    for i in range(0,5):
-        avg_acc += result_array[i].get("accuracy")
-        avg_prec += result_array[i].get("precision")
-        avg_rec += result_array[i].get("recall")
+def main(unused_argv):
+    f = open("outputfile.txt", "w")
 
-    avg_acc /= 5
-    avg_prec /= 5
-    avg_rec /= 5
+    # TODO
+    # Load training and eval data
+    # mnist = tf.contrib.learn.datasets.load_dataset("mnist")
+    # train_data = mnist.train.images # Returns np.array
+    # train_labels = np.asarray(mnist.train.labels, dtype=np.int32)
+    # eval_data = mnist.test.images # Returns np.array
+    # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    print("avg_acc: " + str(avg_acc))
-    print("avg_prec: " + str(avg_prec))
-    print("avg_rec: " + str(avg_rec))
+    for m in range(0,3):
+        f.write("Starting model " + str(m) + " now")
+        
+        for dropout_rate in range(0.4, 0.9, 0.25):
+
+            f.write("Starting with dropout " + str(dropout_rate) + " now")     
+
+            for num_epochs in range(5, 45, 10):
+
+                f.write("Starting with num_epochs " + str(num_epochs) + " now")                
+
+                result_array = run_model(m, dropout_rate, num_epochs, f)
+                
+
+                avg_acc = 0.0
+                avg_prec = 0.0
+                avg_rec = 0.0
+
+                for i in range(0,5):
+                    avg_acc += result_array[i].get("accuracy")
+                    avg_prec += result_array[i].get("precision")
+                    avg_rec += result_array[i].get("recall")
+
+                avg_acc /= 5
+                avg_prec /= 5
+                avg_rec /= 5
+
+                f.write("avg_acc: " + str(avg_acc))
+                f.write("avg_prec: " + str(avg_prec))
+                f.write("avg_rec: " + str(avg_rec))
 
 
-
+    f.close()
 
 # Our application logic will be added here
 
