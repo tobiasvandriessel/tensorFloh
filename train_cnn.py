@@ -201,14 +201,14 @@ def main(unused_argv):
     train_input_fn = tf.estimator.inputs.numpy_input_fn(
         x={"x": data.train.images},
         y=data.train.labels,
-        batch_size=10,
+        batch_size=16,
         num_epochs=None,
         shuffle=True
     )
 
     classifier.train(
         input_fn=train_input_fn,
-        steps=5000,
+        steps=1000,
         hooks=[logging_hook]
     )
 
