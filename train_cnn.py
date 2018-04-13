@@ -173,7 +173,7 @@ def main(unused_argv):
 
     result_array = []
 
-    for i in range(0,5):
+    for i in range(1,6):
 
         # We shall load all the training and validation images and labels into memory using openCV and use that during training
         #TODO we need to do cross validation
