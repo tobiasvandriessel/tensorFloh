@@ -143,18 +143,22 @@ def cnn_model_fn(features, labels, mode):
         )
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
+        P = tf.metrics.precision(
+            labels=labels, predictions=predictions["classes"])
+        R = tf.metrics.recall(
+            labels=labels, predictions=predictions["classes"])
 
     eval_metric_ops = {
         "accuracy": tf.metrics.accuracy(
             labels=labels, predictions=predictions["classes"]
             
         ) ,
-        "recall": tf.metrics.recall(
-            labels=labels, predictions=predictions["classes"]
-        ) ,
-        "precision": tf.metrics.precision(
-            labels=labels, predictions=predictions["classes"]
-        ),
+        "recall": R 
+        ,
+        "precision": P
+        ,
+        "f-score": 2*(P)*(R)/(P + R)
+        ,
         "confusion_matrix": tf.confusion_matrix(labels=labels, predictions=predictions["classes"])
     }
 
