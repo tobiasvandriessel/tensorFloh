@@ -22,6 +22,19 @@ num_channels = 3
 train_path='data/UCF-101/folds'
 
 
+def eval_confusion_matrix(labels, predictions):
+    with tf.variable_scope("eval_confusion_matrix"):
+        con_matrix = tf.confusion_matrix(labels=labels, predictions=predictions, num_classes=5)
+
+        con_matrix_sum = tf.Variable(tf.zeros(shape=(5,5), dtype=tf.int32),
+                                            trainable=False,
+                                            name="confusion_matrix_result",
+                                            collections=[tf.GraphKeys.LOCAL_VARIABLES])
+
+
+        update_op = tf.assign_add(con_matrix_sum, con_matrix)
+
+        return tf.convert_to_tensor(con_matrix_sum), update_op
 
 
 
@@ -157,9 +170,7 @@ def cnn_model_fn(features, labels, mode):
         ,
         "precision": P
         ,
-        "f-score": 2*(P)*(R)/(P + R)
-        ,
-        "confusion_matrix": tf.confusion_matrix(labels=labels, predictions=predictions["classes"])
+        "confusion_matrix": eval_confusion_matrix(labels=labels, predictions=predictions["classes"])
     }
 
     return tf.estimator.EstimatorSpec(
