@@ -154,7 +154,8 @@ def cnn_model_fn(features, labels, mode):
         ) ,
         "precision": tf.metrics.precision(
             labels=labels, predictions=predictions["classes"]
-        )
+        ),
+        "confusion_matrix": tf.confusion_matrix(labels=labels, predictions=predictions["classes"])
     }
 
     return tf.estimator.EstimatorSpec(
@@ -170,58 +171,76 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
+    result_array = []
+
+    for i in range(0,5):
+
+        # We shall load all the training and validation images and labels into memory using openCV and use that during training
+        #TODO we need to do cross validation
+        data = dataset.read_train_sets(train_path, i, False)
+
+
+        print("Complete reading input data. Will Now print a snippet of it")
+        print("Number of files in Training-set:\t\t{}".format(len(data.train.labels)))
+        print("Number of files in Validation-set:\t{}".format(len(data.valid.labels)))
 
 
 
-    # We shall load all the training and validation images and labels into memory using openCV and use that during training
-    #TODO we need to do cross validation
-    data = dataset.read_train_sets(train_path, np.random.randint(0, 5), False)
+        # Create the estimator
+        classifier = tf.estimator.Estimator(
+            model_fn=cnn_model_fn
+        )
+
+        tensors_to_log = {"probabilities": "softmax_tensor"}
+        logging_hook = tf.train.LoggingTensorHook(
+            tensors=tensors_to_log, every_n_iter=50
+        )
+
+        # print("shape of images: ")
+        # print(data.train.images.shape)
 
 
-    print("Complete reading input data. Will Now print a snippet of it")
-    print("Number of files in Training-set:\t\t{}".format(len(data.train.labels)))
-    print("Number of files in Validation-set:\t{}".format(len(data.valid.labels)))
+        train_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x={"x": data.train.images},
+            y=data.train.labels,
+            batch_size=16,
+            num_epochs=1,
+            shuffle=True
+        )
+
+        classifier.train(
+            input_fn=train_input_fn,
+            #steps=1000,
+            hooks=[logging_hook]
+        )
+
+        # Evaluate the model and print results
+        eval_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x={"x": data.valid.images},
+            y=data.valid.labels,
+            num_epochs=1,
+            shuffle=False
+        )
+
+        eval_results = classifier.evaluate(input_fn=eval_input_fn)
+        print(eval_results)
+
+        result_array.append(eval_results)
+
+    avg_acc = 0.0
+    avg_prec = 0.0
+    avg_rec = 0.0
+
+    for i in range(0,5):
+        avg_acc += result_array[i].get("accuracy")
+        avg_prec += result_array[i].get("precision")
+        avg_rec += result_array[i].get("recall")
+
+    avg_acc /= 5
+    avg_prec /= 5
+    avg_rec /= 5
 
 
-
-    # Create the estimator
-    classifier = tf.estimator.Estimator(
-        model_fn=cnn_model_fn, model_dir="/tmp/convnet_model"
-    )
-
-    tensors_to_log = {"probabilities": "softmax_tensor"}
-    logging_hook = tf.train.LoggingTensorHook(
-        tensors=tensors_to_log, every_n_iter=50
-    )
-
-    # print("shape of images: ")
-    # print(data.train.images.shape)
-
-
-    train_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x": data.train.images},
-        y=data.train.labels,
-        batch_size=16,
-        num_epochs=15,
-        shuffle=True
-    )
-
-    classifier.train(
-        input_fn=train_input_fn,
-        #steps=1000,
-        hooks=[logging_hook]
-    )
-
-    # Evaluate the model and print results
-    eval_input_fn = tf.estimator.inputs.numpy_input_fn(
-        x={"x": data.valid.images},
-        y=data.valid.labels,
-        num_epochs=1,
-        shuffle=False
-    )
-
-    eval_results = classifier.evaluate(input_fn=eval_input_fn)
-    print(eval_results)
 
 
 # Our application logic will be added here
