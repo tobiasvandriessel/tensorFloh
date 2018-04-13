@@ -149,10 +149,10 @@ def cnn_model_fn_old(features, labels, mode, params):
         )
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
-        P = tf.metrics.precision(
-            labels=labels, predictions=predictions["classes"])
-        R = tf.metrics.recall(
-            labels=labels, predictions=predictions["classes"])
+    P = tf.metrics.precision(
+        labels=labels, predictions=predictions["classes"])
+    R = tf.metrics.recall(
+        labels=labels, predictions=predictions["classes"])
 
     eval_metric_ops = {
         "accuracy": tf.metrics.accuracy(
@@ -370,7 +370,7 @@ def cnn_model_fn_newnew(features, labels, mode, params):
 
     print(pool3) #//[batch, 6, 6, 512]
 
-    pool3_flat = tf.reshape(pool3, [-1, 12 * 12 * 512])
+    pool3_flat = tf.reshape(pool3, [-1, 20 * 20 * 512])
 
     #Not sure if relu ois the correct activation function, probably in paper
     dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
@@ -422,10 +422,10 @@ def cnn_model_fn_newnew(features, labels, mode, params):
         )
         return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
 
-        P = tf.metrics.precision(
-            labels=labels, predictions=predictions["classes"])
-        R = tf.metrics.recall(
-            labels=labels, predictions=predictions["classes"])
+    P = tf.metrics.precision(
+        labels=labels, predictions=predictions["classes"])
+    R = tf.metrics.recall(
+        labels=labels, predictions=predictions["classes"])
 
     eval_metric_ops = {
         "accuracy": tf.metrics.accuracy(
