@@ -33,6 +33,7 @@
 #include <opencv2/videoio.hpp>
 #include <opencv2/highgui.hpp>
 #include <opencv2/video/tracking.hpp>
+#include <opencv2/optflow.hpp>
 //#include <opencv2/highgui/highgui_c.h>
 //#include <opencv2/imgproc/types_c.h>
 
@@ -199,7 +200,8 @@ int handleOfflineStuff() {
 				cout << "Inside loop Entered dir: " << m_data_path + ent->d_name << endl;
 
 				while ((ent1 = readdir(dir1)) != NULL) {
-					if (strcmp(ent1->d_name, ".") == 0 || strcmp(ent1->d_name, "..") == 0 || strcmp(strrchr(ent1->d_name, '.'), ".csv") == 0)
+					if (strcmp(ent1->d_name, ".") == 0 || strcmp(ent1->d_name, "..") == 0 || strcmp(strrchr(ent1->d_name, '.'), ".flo") == 0 
+						|| strcmp(strrchr(ent1->d_name, '.'), ".jpg") == 0)
 						continue;
 
 
@@ -310,21 +312,28 @@ int extractFeaturesFromVideo(string path) {
 	drawOptFlowMap(outputFlow, cflow, 5, CV_RGB(0, 255, 0));*/
 
 	std::string flowfilepath = path.substr(0, path.length() - 4);
-	flowfilepath += "_flow.csv";
+	//flowfilepath += "_flow.yml";
 	std::string imgfilepath = path.substr(0, path.length() - 4);
-	imgfilepath += "_img.csv";
+	//imgfilepath += "_img.yml";
 
 	/*cout << "filepath: " << filepath << endl;
 	cout << "path: " << path << endl;*/
-	FileStorage fs(flowfilepath, FileStorage::WRITE);
+	/*FileStorage fs(flowfilepath, FileStorage::WRITE);
 	fs << "optical flow" << outputFlow;
-	fs.release();
+	fs.release();*/
+
+	optflow::writeOpticalFlow(flowfilepath + ".flo", outputFlow);
+
+	
 
 	resize(prevFrame, prevFrame, Size(120, 120), 0, 0, INTER_AREA);
 
-	FileStorage fs1(imgfilepath, FileStorage::WRITE);
+	/*FileStorage fs1(imgfilepath, FileStorage::WRITE);
 	fs1 << "img" << prevFrame;
-	fs1.release();
+	fs1.release();*/
+
+	imwrite(imgfilepath + ".jpg", prevFrame);
+
 
 	/*for (int i = 0; i < length; i++) {
 		if (status[i] == 0) continue;
