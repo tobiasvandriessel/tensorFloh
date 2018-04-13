@@ -241,7 +241,7 @@ def main(unused_argv):
         print(eval_results)
 
         result_array.append(eval_results)
-    fscore = []
+    fscore = [0.0,0.0,0.0,0.0,0.0]
     avg_acc = 0.0
     avg_prec = 0.0
     avg_rec = 0.0
@@ -251,7 +251,7 @@ def main(unused_argv):
         avg_acc += result_array[i].get("accuracy")
         avg_prec += result_array[i].get("precision")
         avg_rec += result_array[i].get("recall")
-        fscore.append(2 * result_array[i].get("recall") *result_array[i].get("precision")/(result_array[i].get("recall") + result_array[i].get("precision")))
+        fscore[i] = 2 * result_array[i].get("recall") *result_array[i].get("precision")/(result_array[i].get("recall") + result_array[i].get("precision")))
         avg_fscore += fscore[i]
 
     avg_acc /= 5
