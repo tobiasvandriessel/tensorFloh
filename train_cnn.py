@@ -97,7 +97,7 @@ def cnn_model_fn_old(features, labels, mode, params):
 
     print(pool3) #//[batch, 6, 6, 512]
 
-    pool3_flat = tf.reshape(pool3, [-1, 12 * 12 * 512])
+    pool3_flat = tf.reshape(pool3, [-1, 6 * 6 * 512])
 
     #Not sure if relu ois the correct activation function, probably in paper
     dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
@@ -532,10 +532,10 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    for m in range(0,3):
+    for m in range(2,3):
         f.write("Starting model " + str(m) + " now")
         
-        for dropout_rate in range(0.4, 0.9, 0.25):
+        for dropout_rate in np.arange(0.4, 0.9, 0.25):
 
             f.write("Starting with dropout " + str(dropout_rate) + " now")     
 
