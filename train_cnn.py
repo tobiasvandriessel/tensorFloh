@@ -444,7 +444,7 @@ def cnn_model_fn_newnew(features, labels, mode, params):
         mode=mode, loss=loss, eval_metric_ops=eval_metric_ops
     )
 
-def run_model(model, dropout_rate, num_epochs):
+def run_model(model, optical_flow, dropout_rate, num_epochs):
 
     result_array = []
     
@@ -455,12 +455,16 @@ def run_model(model, dropout_rate, num_epochs):
             print("Training on all folds and testing on test set now.\n")
         # We shall load all the training and validation images and labels into memory using openCV and use that during training
         #TODO we need to do cross validation
-        data = dataset.read_train_sets(train_path, own_path, i, False)
+        data = dataset.read_train_sets(train_path, own_path, i, optical_flow)
 
 
         # print("Complete reading input data. Will Now print a snippet of it")
         # print("Number of files in Training-set:\t\t{}".format(len(data.train.labels)))
         # print("Number of files in Validation-set:\t{}".format(len(data.valid.labels)))
+
+        depth = 3
+        if optical_flow:
+            depth = 2
 
         classifier = None
 
@@ -470,7 +474,7 @@ def run_model(model, dropout_rate, num_epochs):
                 model_fn=cnn_model_fn_old,
                 params={
                     'dropout_rate': dropout_rate,
-                    'depth':        3
+                    'depth':        depth
                 }
             )
         elif model == 1:
@@ -478,7 +482,7 @@ def run_model(model, dropout_rate, num_epochs):
                 model_fn=cnn_model_fn_new,
                 params={
                     'dropout_rate': dropout_rate,
-                    'depth':        3
+                    'depth':        depth
                 }
             )
         else:
@@ -486,7 +490,7 @@ def run_model(model, dropout_rate, num_epochs):
                 model_fn=cnn_model_fn_newnew,
                 params={
                     'dropout_rate': dropout_rate,
-                    'depth':        3
+                    'depth':        depth
                 }
             )
 
@@ -541,7 +545,9 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    for m in range(2,3):
+    optical_flow = True
+
+    for m in range(0,1):
         f.write("Starting model " + str(m) + " now\n")
         print("\nStarting model " + str(m) + " now\n\n")
         
@@ -555,7 +561,7 @@ def main(unused_argv):
                 f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
                 print("\nStarting with num_epochs " + str(num_epochs) + " now\n\n")                
 
-                result_array = run_model(m, dropout_rate, num_epochs)
+                result_array = run_model(m, optical_flow, dropout_rate, num_epochs)
                 
                 avg_acc = 0.0
                 avg_prec = 0.0
