@@ -545,7 +545,7 @@ def main(unused_argv):
 
             f.write("Starting with dropout " + str(dropout_rate) + " now\n")     
 
-            for num_epochs in range(5, 55, 10):
+            for num_epochs in range(5,55, 10):
 
                 f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
 
@@ -563,8 +563,7 @@ def main(unused_argv):
                     avg_rec += result_array[i].get("recall")
                     fscore[i] = 2 * result_array[i].get("recall") *result_array[i].get("precision")/(result_array[i].get("recall") + result_array[i].get("precision"))
                     avg_fscore += fscore[i]
-                    # f.write("Confusion matrix for version " + str(i ))
-                    np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + ".txt", result_array[i].get("confusion_matrix"))
+                    np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_version" + str(i) + ".txt", result_array[i].get("confusion_matrix"))
 
                 avg_acc /= 5
                 avg_prec /= 5
@@ -576,6 +575,19 @@ def main(unused_argv):
                 f.write("avg_rec: " + str(avg_rec) + "\n")
                 f.write("avg_fscore: " + str(avg_fscore) + "\n" )
 
+
+                acc_test = result_array[0].get("accuracy")
+                prec_test = result_array[0].get("precision")
+                rec_test = result_array[0].get("recall")
+                fscore_test = 2 * result_array[0].get("recall") * result_array[0].get("precision")/(result_array[0].get("recall") + result_array[0].get("precision"))
+
+                f.write("test_acc: " + str(acc_test) + "\n" )
+                f.write("test_prec: " + str(prec_test) + "\n")
+                f.write("test_rec: " + str(rec_test) + "\n")
+                f.write("test_fscore: " + str(fscore_test) + "\n" )
+
+                np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_test.txt", result_array[0].get("confusion_matrix"))
+                
 
     f.close()
 
