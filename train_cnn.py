@@ -538,32 +538,33 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    for m in range(0,3):
+    for m in range(0,1):
         f.write("Starting model " + str(m) + " now\n")
         
         for dropout_rate in np.arange(0.65, 1.0, 0.45):
 
             f.write("Starting with dropout " + str(dropout_rate) + " now\n")     
 
-            for num_epochs in range(1, 35, 10):
+            for num_epochs in range(1, 2, 10):
 
                 f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
 
                 result_array = run_model(m, dropout_rate, num_epochs, f)
                 
-                fscore = [0.0,0.0,0.0,0.0,0.0,0.0]
                 avg_acc = 0.0
                 avg_prec = 0.0
                 avg_rec = 0.0
                 avg_fscore = 0.0
 
-                # for i in range(1,6):
-                #     avg_acc += result_array[i].get("accuracy")
-                #     avg_prec += result_array[i].get("precision")
-                #     avg_rec += result_array[i].get("recall")
-                #     fscore[i] = 2 * (result_array[i].get("recall")) * (result_array[i].get("precision")) / (result_array[i].get("recall") + result_array[i].get("precision"))
-                #     avg_fscore += fscore[i]
-                #     np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_version" + str(i) + ".txt", result_array[i].get("confusion_matrix"))
+                for i in range(1,6):
+                    acc = result_array[i].get("accuracy")
+                    prec = result_array[i].get("precision")
+                    rec = result_array[i].get("recall")
+                    avg_acc += acc
+                    avg_prec += prec
+                    avg_rec += rec
+                    avg_fscore += 2 * rec * prec / (rec + prec)
+                    np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_version" + str(i) + ".txt", result_array[i].get("confusion_matrix"))
 
                 avg_acc /= 5
                 avg_prec /= 5
@@ -589,10 +590,10 @@ def main(unused_argv):
                 np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_test.txt", result_array[0].get("confusion_matrix"))
 
 
-                #STUPID
-                avg_fscore += fscore_test
-                avg_fscore /= 5
-                f.write("avg_fscore: " + str(avg_fscore) + "\n" )
+                # #STUPID
+                # avg_fscore += fscore_test
+                # avg_fscore /= 5
+                # f.write("avg_fscore: " + str(avg_fscore) + "\n" )
 
     f.close()
 
