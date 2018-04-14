@@ -126,11 +126,7 @@ def cnn_model_fn_old(features, labels, mode, params):
     print(predictions)
 
     if mode == tf.estimator.ModeKeys.PREDICT:
-        if optical_flow:
-            extra = "opticalflow"
-        else:
-            extra = "RGB"
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions,model_dir="/tmp/convnet_model"+extra)
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
 
     onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
     # a = tf.Print(logits, [logits])
@@ -472,14 +468,20 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
 
         classifier = None
 
+        if optical_flow:
+            extra = "flowmodel"
+        else:
+            extra = "ourmodel"
+
         # Create the estimator        
         if model == 0:
             classifier = tf.estimator.Estimator(
                 model_fn=cnn_model_fn_old,
                 params={
                     'dropout_rate': dropout_rate,
-                    'depth':        depth
-                }
+                    'depth':        depth,
+                },
+                model_dir="/tmp/convnet_model/"+extra                
             )
         elif model == 1:
             classifier = tf.estimator.Estimator(
@@ -487,7 +489,8 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
                 params={
                     'dropout_rate': dropout_rate,
                     'depth':        depth
-                }
+                },
+                model_dir="/tmp/convnet_model/"+extra  
             )
         else:
             classifier = tf.estimator.Estimator(
@@ -495,7 +498,8 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
                 params={
                     'dropout_rate': dropout_rate,
                     'depth':        depth
-                }
+                },
+                model_dir="/tmp/convnet_model/"+extra  
             )
 
         tensors_to_log = {"probabilities": "softmax_tensor"}
@@ -726,7 +730,7 @@ def main(unused_argv):
                 f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
                 print("\nStarting with num_epochs " + str(num_epochs) + " now\n\n")                
 
-                run_two_stream_model(m, optical_flow, dropout_rate, num_epochs)
+                run_two_stream_model(m, dropout_rate, num_epochs)
 
                 # result_array = run_model(m, optical_flow, dropout_rate, num_epochs)
                 
