@@ -126,9 +126,9 @@ def cnn_model_fn_old(features, labels, mode, params):
     print(predictions)
 
     if mode == tf.estimator.ModeKeys.PREDICT:
-        if optical_flow
+        if optical_flow:
             extra = "opticalflow"
-        elif
+        else:
             extra = "RGB"
         return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions,model_dir="/tmp/convnet_model"+extra)
 
@@ -512,13 +512,14 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
             y=data.train.labels,
             batch_size=2,
             num_epochs=num_epochs,
-            shuffle=True
+            shuffle=True,
         )
 
         classifier.train(
             input_fn=train_input_fn,
             #steps=1000,
-            hooks=[logging_hook]
+            hooks=[logging_hook],
+
         )
 
         # Evaluate the model and print results
@@ -535,6 +536,163 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
         
 
         result_array.append(eval_results)
+
+    return result_array
+
+def run_two_stream_model(model, optical_flow, dropout_rate, num_epochs):
+
+    result_array = []
+    
+    #Do cross validation
+    for i in range(0,6):
+
+        if i == 0:
+            print("Training on all folds and testing on test set now.\n")
+        # We shall load all the training and validation images and labels into memory using openCV and use that during training
+        #TODO we need to do cross validation
+        data = dataset.read_train_sets(train_path, own_path, i, optical_flow)
+
+
+        # print("Complete reading input data. Will Now print a snippet of it")
+        # print("Number of files in Training-set:\t\t{}".format(len(data.train.labels)))
+        # print("Number of files in Validation-set:\t{}".format(len(data.valid.labels)))
+
+        img_classifier = None
+
+        # Create the estimator        
+        if model == 0:
+            img_classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_old,
+                params={
+                    'dropout_rate': dropout_rate,
+                    'depth':        3
+                }
+            )
+        elif model == 1:
+            img_classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_new,
+                params={
+                    'dropout_rate': dropout_rate,
+                    'depth':        3
+                }
+            )
+        else:
+            img_classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_newnew,
+                params={
+                    'dropout_rate': dropout_rate,
+                    'depth':        3
+                }
+            )
+
+        tensors_to_log = {"probabilities": "softmax_tensor"}
+        logging_hook = tf.train.LoggingTensorHook(
+            tensors=tensors_to_log, every_n_iter=50
+        )
+
+        # print("shape of images: ")
+        # print(data.train.images.shape)
+
+
+        train_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x={"x": data.train.images},
+            y=data.train.labels,
+            batch_size=2,
+            num_epochs=num_epochs,
+            shuffle=True,
+        )
+
+        img_classifier.train(
+            input_fn=train_input_fn,
+            #steps=1000,
+            hooks=[logging_hook],
+
+        )
+
+        # Evaluate the model and print results
+        pred_input_fn = tf.estimator.inputs.numpy_input_fn(
+            x={"x": data.valid.images},
+            y=data.valid.labels,
+            num_epochs=1,
+            shuffle=False
+        )
+
+        pred_results = img_classifier.predict(input_fn=pred_input_fn)
+        print(pred_results)
+        #f.write(eval_results.get("confusion_matrix"))
+        
+
+
+
+        flow_classifier = None
+
+        # Create the estimator        
+        if model == 0:
+            flow_classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_old,
+                params={
+                    'dropout_rate': dropout_rate,
+                    'depth':        2
+                }
+            )
+        elif model == 1:
+            flow_classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_new,
+                params={
+                    'dropout_rate': dropout_rate,
+                    'depth':        2
+                }
+            )
+        else:
+            flow_classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_newnew,
+                params={
+                    'dropout_rate': dropout_rate,
+                    'depth':        2
+                }
+            )
+
+        # print("shape of images: ")
+        # print(data.train.images.shape)
+
+
+        train_input_fn_flow = tf.estimator.inputs.numpy_input_fn(
+            x={"x": data.train.images},
+            y=data.train.labels,
+            batch_size=2,
+            num_epochs=num_epochs,
+            shuffle=True,
+        )
+
+        flow_classifier.train(
+            input_fn=train_input_fn_flow,
+            #steps=1000,
+            hooks=[logging_hook],
+
+        )
+
+        # Evaluate the model and print results
+        pred_input_fn_flow = tf.estimator.inputs.numpy_input_fn(
+            x={"x": data.valid.images},
+            y=data.valid.labels,
+            num_epochs=1,
+            shuffle=False
+        )
+
+        pred_results_flow = flow_classifier.predict(input_fn=pred_input_fn_flow)
+        print(pred_results_flow)
+
+        # predictions= {
+        #     "classes":  tf.argmax(input=logits, axis=1),
+        #     "probabilities": tf.nn.softmax(logits, name="softmax_tensor")        
+        # }
+
+        predicted_classes = [p["classes"][0] for p in pred_results_flow]
+        print(
+            "Test Samples, Class Predictions:    {}\n"
+            .format(predicted_classes))
+
+        #result_array.append(eval_results)
 
     return result_array
 
@@ -561,12 +719,14 @@ def main(unused_argv):
             f.write("Starting with dropout " + str(dropout_rate) + " now\n")     
             print("\nStarting with dropout " + str(dropout_rate) + " now\n\n")     
 
-            for num_epochs in range(25, 34, 10):
+            for num_epochs in range(1, 2, 10):
 
                 f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
                 print("\nStarting with num_epochs " + str(num_epochs) + " now\n\n")                
 
-                result_array = run_model(m, optical_flow, dropout_rate, num_epochs)
+                run_two_stream_model(m, optical_flow, dropout_rate, num_epochs)
+
+                # result_array = run_model(m, optical_flow, dropout_rate, num_epochs)
                 
                 avg_acc = 0.0
                 avg_prec = 0.0
@@ -603,11 +763,11 @@ def main(unused_argv):
                 f.write("test_prec: " + str(prec_test) + "\n")
                 f.write("test_rec: " + str(rec_test) + "\n")
                 f.write("test_fscore: " + str(fscore_test) + "\n" )
-                if optical_flow
+                if optical_flow:
                     extra = "flowmodel"
-                elif two_stream
+                elif two_stream:
                     extra = "twostreammodel"
-                elif 
+                else: 
                     extra = "ourmodel"
                 np.savetxt(extra + "/conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_test.txt", result_array[0].get("confusion_matrix"))
 
