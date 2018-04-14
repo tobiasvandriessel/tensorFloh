@@ -495,7 +495,7 @@ def run_model(model, dropout_rate, num_epochs, f):
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
             x={"x": data.train.images},
             y=data.train.labels,
-            batch_size=16,
+            batch_size=8,
             num_epochs=num_epochs,
             shuffle=True
         )
@@ -515,7 +515,9 @@ def run_model(model, dropout_rate, num_epochs, f):
         )
 
         eval_results = classifier.evaluate(input_fn=eval_input_fn)
-        f.write(eval_results)
+        print(eval_results)
+        #f.write(eval_results.get("confusion_matrix"))
+        
 
         result_array.append(eval_results)
 
@@ -532,16 +534,16 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    for m in range(2,3):
-        f.write("Starting model " + str(m) + " now")
+    for m in range(0,2):
+        f.write("Starting model " + str(m) + " now\n")
         
-        for dropout_rate in np.arange(0.4, 0.9, 0.25):
+        for dropout_rate in np.arange(0.4, 1.0, 0.25):
 
-            f.write("Starting with dropout " + str(dropout_rate) + " now")     
+            f.write("Starting with dropout " + str(dropout_rate) + " now\n")     
 
-            for num_epochs in range(5, 45, 10):
+            for num_epochs in range(20,100, 20):
 
-                f.write("Starting with num_epochs " + str(num_epochs) + " now")                
+                f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
 
                 result_array = run_model(m, dropout_rate, num_epochs, f)
                 
@@ -557,16 +559,18 @@ def main(unused_argv):
                     avg_rec += result_array[i].get("recall")
                     fscore[i] = 2 * result_array[i].get("recall") *result_array[i].get("precision")/(result_array[i].get("recall") + result_array[i].get("precision"))
                     avg_fscore += fscore[i]
+                    # f.write("Confusion matrix for version " + str(i ))
+                    np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + ".txt", result_array[i].get("confusion_matrix"))
 
                 avg_acc /= 5
                 avg_prec /= 5
                 avg_rec /= 5
                 avg_fscore /= 5
 
-                f.write("avg_acc: " + str(avg_acc))
-                f.write("avg_prec: " + str(avg_prec))
-                f.write("avg_rec: " + str(avg_rec))
-                f.write("avg_fscore: " + str(avg_fscore))
+                f.write("avg_acc: " + str(avg_acc) + "\n" )
+                f.write("avg_prec: " + str(avg_prec) + "\n")
+                f.write("avg_rec: " + str(avg_rec) + "\n")
+                f.write("avg_fscore: " + str(avg_fscore) + "\n" )
 
 
     f.close()
