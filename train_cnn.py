@@ -126,7 +126,11 @@ def cnn_model_fn_old(features, labels, mode, params):
     print(predictions)
 
     if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+        if optical_flow:
+            extra = "opticalflow"
+        else:
+            extra = "RGB"
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions,model_dir="/tmp/convnet_model"+extra)
 
     onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
     # a = tf.Print(logits, [logits])
@@ -705,10 +709,10 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    optical_flow = True
-    both = True
+    optical_flow = False
+    two_stream = False
 
-    for m in range(0,1):
+    for m in range(2,3):
         f.write("Starting model " + str(m) + " now\n")
         print("\nStarting model " + str(m) + " now\n\n")
         
@@ -726,43 +730,48 @@ def main(unused_argv):
 
                 # result_array = run_model(m, optical_flow, dropout_rate, num_epochs)
                 
-                # avg_acc = 0.0
-                # avg_prec = 0.0
-                # avg_rec = 0.0
-                # avg_fscore = 0.0
+                avg_acc = 0.0
+                avg_prec = 0.0
+                avg_rec = 0.0
+                avg_fscore = 0.0
 
-                # for i in range(1,6):
-                #     acc = result_array[i].get("accuracy")
-                #     prec = result_array[i].get("precision")
-                #     rec = result_array[i].get("recall")
-                #     avg_acc += acc
-                #     avg_prec += prec
-                #     avg_rec += rec
-                #     avg_fscore += 2 * rec * prec / (rec + prec)
-                #     np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_version" + str(i) + ".txt", result_array[i].get("confusion_matrix"))
+                for i in range(1,6):
+                    acc = result_array[i].get("accuracy")
+                    prec = result_array[i].get("precision")
+                    rec = result_array[i].get("recall")
+                    avg_acc += acc
+                    avg_prec += prec
+                    avg_rec += rec
+                    avg_fscore += 2 * rec * prec / (rec + prec)
+                    np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_version" + str(i) + ".txt", result_array[i].get("confusion_matrix"))
 
-                # avg_acc /= 5
-                # avg_prec /= 5
-                # avg_rec /= 5
-                # avg_fscore /= 5
+                avg_acc /= 5
+                avg_prec /= 5
+                avg_rec /= 5
+                avg_fscore /= 5
 
-                # f.write("avg_acc: " + str(avg_acc) + "\n" )
-                # f.write("avg_prec: " + str(avg_prec) + "\n")
-                # f.write("avg_rec: " + str(avg_rec) + "\n")
-                # f.write("avg_fscore: " + str(avg_fscore) + "\n" )
+                f.write("avg_acc: " + str(avg_acc) + "\n" )
+                f.write("avg_prec: " + str(avg_prec) + "\n")
+                f.write("avg_rec: " + str(avg_rec) + "\n")
+                f.write("avg_fscore: " + str(avg_fscore) + "\n" )
 
 
-                # acc_test = result_array[0].get("accuracy")
-                # prec_test = result_array[0].get("precision")
-                # rec_test = result_array[0].get("recall")
-                # fscore_test = 2 * result_array[0].get("recall") * result_array[0].get("precision")/(result_array[0].get("recall") + result_array[0].get("precision"))
+                acc_test = result_array[0].get("accuracy")
+                prec_test = result_array[0].get("precision")
+                rec_test = result_array[0].get("recall")
+                fscore_test = 2 * result_array[0].get("recall") * result_array[0].get("precision")/(result_array[0].get("recall") + result_array[0].get("precision"))
 
-                # f.write("test_acc: " + str(acc_test) + "\n" )
-                # f.write("test_prec: " + str(prec_test) + "\n")
-                # f.write("test_rec: " + str(rec_test) + "\n")
-                # f.write("test_fscore: " + str(fscore_test) + "\n" )
-
-                # np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_test.txt", result_array[0].get("confusion_matrix"))
+                f.write("test_acc: " + str(acc_test) + "\n" )
+                f.write("test_prec: " + str(prec_test) + "\n")
+                f.write("test_rec: " + str(rec_test) + "\n")
+                f.write("test_fscore: " + str(fscore_test) + "\n" )
+                if optical_flow:
+                    extra = "flowmodel"
+                elif two_stream:
+                    extra = "twostreammodel"
+                else: 
+                    extra = "ourmodel"
+                np.savetxt(extra + "/conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_test.txt", result_array[0].get("confusion_matrix"))
 
 
                 # #STUPID
