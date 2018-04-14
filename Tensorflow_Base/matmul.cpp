@@ -234,8 +234,8 @@ int handleOfflineStuff() {
 int handleOfflineStuffOwn() {
 	const string m_data_path = "../data/own/";
 
-	DIR *dir, *dir1;
-	struct dirent *ent, *ent1;
+	DIR *dir;
+	struct dirent *ent;
 	if ((dir = opendir(m_data_path.c_str())) != NULL) {
 		cout << "Entered dir: " << m_data_path << endl;
 		/* print all the files and directories within directory */
@@ -244,7 +244,7 @@ int handleOfflineStuffOwn() {
 				|| strcmp(strrchr(ent->d_name, '.'), ".jpg") == 0)
 				continue;
 
-			extractFeaturesFromVideo(m_data_path + ent->d_name + "/" + ent1->d_name);
+			extractFeaturesFromVideo(m_data_path + ent->d_name);
 
 
 
@@ -398,7 +398,7 @@ int main()
 
 	if (answer == "y") {
 		cout << "read y " << endl;
-		handleOfflineStuff();
+		handleOfflineStuffOwn();
 	}
 	else if (answer == "n") {
 		cout << "read n" << endl;
