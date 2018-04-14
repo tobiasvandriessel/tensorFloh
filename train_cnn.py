@@ -693,22 +693,23 @@ def run_two_stream_model(model, dropout_rate, num_epochs):
         #     "probabilities": tf.nn.softmax(logits, name="softmax_tensor")        
         # }
 
-        predicted_probabilities_img = [p["probabilities"] for p in pred_results]
-        predicted_probabilities_flow = [p["probabilities"] for p in pred_results_flow]
+        predicted_probabilities_img = tf.convert_to_tensor([p["probabilities"] for p in pred_results])
+        predicted_probabilities_flow = tf.convert_to_tensor([p["probabilities"] for p in pred_results_flow])
 
-        predicted_probabilities = []
 
-        for i,img_val in enumerate(predicted_probabilities_img):
-            temp = []
-            for elem in range(0,5):
-                temp.append(img_val[elem] + predicted_probabilities_flow[i][elem] / 2)
+        predicted_probabilities = tf.add(predicted_probabilities_img, predicted_probabilities_flow)
 
-            predicted_probabilities.append(temp)
+        # for i,img_val in enumerate(predicted_probabilities_img):
+        #     temp = []
+        #     for elem in range(0,5):
+        #         temp.append(img_val[elem] + predicted_probabilities_flow[i][elem] / 2)
+
+        #     predicted_probabilities.append(temp)
 
         predicted_classes = []
         
         for elem in predicted_probabilities:
-            predicted_classes.append(tf.nn.softmax(logits=elem, name="softmax_tensor"))
+            predicted_classes.append(tf.argmax(input=elem, axis=0))
 
         print(
             "Test Samples, Class Predictions:    {}\n"
