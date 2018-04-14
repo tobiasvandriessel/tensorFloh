@@ -40,7 +40,7 @@ def eval_confusion_matrix(labels, predictions):
 def cnn_model_fn_old(features, labels, mode, params):
     """Model function for CNN."""
     # Input Layer
-    input_layer = tf.reshape(features["x"], [-1, 120, 120, 3])
+    input_layer = tf.reshape(features["x"], [-1, 120, 120, params['depth']])
 
     
     #I don't think our first layer needs this big kernel size, probably too big for our input size. Maybe 5 is enough
@@ -179,7 +179,7 @@ def cnn_model_fn_old(features, labels, mode, params):
 def cnn_model_fn_new(features, labels, mode, params):
     """Model function for CNN."""
     # Input Layer
-    input_layer = tf.reshape(features["x"], [-1, 120, 120, 3])
+    input_layer = tf.reshape(features["x"], [-1, 120, 120, params['depth']])
 
     
     #I don't think our first layer needs this big kernel size, probably too big for our input size. Maybe 5 is enough
@@ -313,7 +313,7 @@ def cnn_model_fn_new(features, labels, mode, params):
 def cnn_model_fn_newnew(features, labels, mode, params):
     """Model function for CNN."""
     # Input Layer
-    input_layer = tf.reshape(features["x"], [-1, 120, 120, 3])
+    input_layer = tf.reshape(features["x"], [-1, 120, 120, params['depth']])
 
     
     #I don't think our first layer needs this big kernel size, probably too big for our input size. Maybe 5 is enough
@@ -444,7 +444,7 @@ def cnn_model_fn_newnew(features, labels, mode, params):
         mode=mode, loss=loss, eval_metric_ops=eval_metric_ops
     )
 
-def run_model(model, dropout_rate, num_epochs, f):
+def run_model(model, dropout_rate, num_epochs):
 
     result_array = []
     
@@ -452,7 +452,7 @@ def run_model(model, dropout_rate, num_epochs, f):
     for i in range(0,6):
 
         if i == 0:
-            f.write("Training on all folds and testing on test set now.\n")
+            print("Training on all folds and testing on test set now.\n")
         # We shall load all the training and validation images and labels into memory using openCV and use that during training
         #TODO we need to do cross validation
         data = dataset.read_train_sets(train_path, own_path, i, False)
@@ -469,21 +469,24 @@ def run_model(model, dropout_rate, num_epochs, f):
             classifier = tf.estimator.Estimator(
                 model_fn=cnn_model_fn_old,
                 params={
-                    'dropout_rate': dropout_rate
+                    'dropout_rate': dropout_rate,
+                    'depth':        3
                 }
             )
         elif model == 1:
             classifier = tf.estimator.Estimator(
                 model_fn=cnn_model_fn_new,
                 params={
-                    'dropout_rate': dropout_rate
+                    'dropout_rate': dropout_rate,
+                    'depth':        3
                 }
             )
         else:
             classifier = tf.estimator.Estimator(
                 model_fn=cnn_model_fn_newnew,
                 params={
-                    'dropout_rate': dropout_rate
+                    'dropout_rate': dropout_rate,
+                    'depth':        3
                 }
             )
 
@@ -540,16 +543,19 @@ def main(unused_argv):
 
     for m in range(2,3):
         f.write("Starting model " + str(m) + " now\n")
+        print("\nStarting model " + str(m) + " now\n\n")
         
         for dropout_rate in np.arange(0.65, 1.0, 0.45):
 
             f.write("Starting with dropout " + str(dropout_rate) + " now\n")     
+            print("\nStarting with dropout " + str(dropout_rate) + " now\n\n")     
 
             for num_epochs in range(25, 34, 10):
 
                 f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
+                print("\nStarting with num_epochs " + str(num_epochs) + " now\n\n")                
 
-                result_array = run_model(m, dropout_rate, num_epochs, f)
+                result_array = run_model(m, dropout_rate, num_epochs)
                 
                 avg_acc = 0.0
                 avg_prec = 0.0
