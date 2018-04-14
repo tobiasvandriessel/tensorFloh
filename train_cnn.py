@@ -499,7 +499,7 @@ def run_model(model, dropout_rate, num_epochs, f):
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
             x={"x": data.train.images},
             y=data.train.labels,
-            batch_size=8,
+            batch_size=5,
             num_epochs=num_epochs,
             shuffle=True
         )
@@ -538,30 +538,30 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    for m in range(0,3):
+    for m in range(1,3):
         f.write("Starting model " + str(m) + " now\n")
         
-        for dropout_rate in np.arange(0.4, 1.0, 0.25):
+        for dropout_rate in np.arange(0.65, 1.0, 0.45):
 
             f.write("Starting with dropout " + str(dropout_rate) + " now\n")     
 
-            for num_epochs in range(5, 55, 10):
+            for num_epochs in range(25, 35, 10):
 
                 f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
 
                 result_array = run_model(m, dropout_rate, num_epochs, f)
                 
-                fscore = [0.0,0.0,0.0,0.0,0.0]
+                fscore = [0.0,0.0,0.0,0.0,0.0,0.0]
                 avg_acc = 0.0
                 avg_prec = 0.0
                 avg_rec = 0.0
                 avg_fscore = 0.0
 
-                for i in range(0,5):
+                for i in range(1,6):
                     avg_acc += result_array[i].get("accuracy")
                     avg_prec += result_array[i].get("precision")
                     avg_rec += result_array[i].get("recall")
-                    fscore[i] = 2 * result_array[i].get("recall") *result_array[i].get("precision")/(result_array[i].get("recall") + result_array[i].get("precision"))
+                    fscore[i] = 2 * (result_array[i].get("recall")) * (result_array[i].get("precision")) / (result_array[i].get("recall") + result_array[i].get("precision"))
                     avg_fscore += fscore[i]
                     # f.write("Confusion matrix for version " + str(i ))
                     np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + ".txt", result_array[i].get("confusion_matrix"))
