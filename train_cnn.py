@@ -143,7 +143,7 @@ def cnn_model_fn_old(features, labels, mode, params):
 
 
     if mode == tf.estimator.ModeKeys.TRAIN:
-        optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.01) #This changes over the iterations
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001) #This changes over the iterations
         train_op = optimizer.minimize(
             loss=loss,
             global_step=tf.train.get_global_step()
@@ -548,7 +548,7 @@ def run_two_stream_model(model, dropout_rate, num_epochs):
     result_array = []
     
     #Do cross validation
-    for i in range(0,6):
+    for i in range(1,2):
 
         if i == 0:
             print("Training on all folds and testing on test set now.\n")
@@ -693,7 +693,7 @@ def run_two_stream_model(model, dropout_rate, num_epochs):
         #     "probabilities": tf.nn.softmax(logits, name="softmax_tensor")        
         # }
 
-        predicted_classes = [p["classes"][0] for p in pred_results_flow]
+        predicted_classes = [p["classes"] for p in pred_results_flow]
         print(
             "Test Samples, Class Predictions:    {}\n"
             .format(predicted_classes))
