@@ -47,6 +47,7 @@ def load_own_fold_img(own_path, length):
         image = image.astype(np.float32)
         image = np.multiply(image, 1.0 / 255.0)
         images.append(image)
+
         # label = np.zeros(length)
         # label[num] = 1.0
         labels.append(num)
@@ -70,7 +71,7 @@ def load_own_fold_flow(own_path, length):
     #index = fold - 1 (folds = {1,2,3,4,5})
     # index = fold - 1
     print('Now going to read files from own videos')
-    path = os.path.join(own_path, '*g')
+    path = os.path.join(own_path, '*o')
     files = glob.glob(path)
     for fl in files:
         name, ext = os.path.splitext(os.path.basename(fl))
@@ -82,6 +83,7 @@ def load_own_fold_flow(own_path, length):
         flow = cv2.optflow.readOpticalFlow(fl)
         flows.append(flow)
 
+        # print(flow.shape)
 
         # image = cv2.imread(fl)
         #image = cv2.resize(image, (image_size, image_size),0,0, cv2.INTER_LINEAR)
@@ -149,7 +151,7 @@ def load_train_fold_flow(train_path, fold, length):
     #index = fold - 1 (folds = {1,2,3,4,5})
     # index = fold - 1
     print('Now going to read files from fold {}'.format(fold))
-    path = os.path.join(train_path, str(fold), '*g')
+    path = os.path.join(train_path, str(fold), '*o')
     files = glob.glob(path)
     for fl in files:
         name, ext = os.path.splitext(os.path.basename(fl))
