@@ -9,7 +9,13 @@ class_map_num = {
   "C" : 1,
   "J" : 2,
   "L" : 3,
-  "W" : 4
+  "W" : 4,
+  "p" : 1,
+  "b" : 0,
+  "c" : 1,
+  "j" : 2,
+  "l" : 3,
+  "w" : 4,
 }
 
 class_list = [ "Brushing", "Cutting", "Jumping", "Lunges", "Wall" ]
@@ -24,11 +30,14 @@ def load_own_fold_img(own_path, length):
     #index = fold - 1 (folds = {1,2,3,4,5})
     #index = fold - 1
     print('Now going to read files from own videos')
-    path = own_path
+    path = os.path.join(own_path, '*g')
+    # print("path is=" + path)
+    
     files = glob.glob(path)
     for fl in files:
+        print(" reading file " + os.path.basename(fl))
         name, ext = os.path.splitext(os.path.basename(fl))
-        num = class_map_num.get(name[2:3])
+        num = class_map_num.get(name[0:1])
         #Don't read the videos or flow files
         if ext == ".avi" or ext == ".flo":
           continue
@@ -65,7 +74,7 @@ def load_own_fold_flow(own_path, length):
     files = glob.glob(path)
     for fl in files:
         name, ext = os.path.splitext(os.path.basename(fl))
-        num = class_map_num.get(name[2:3])        
+        num = class_map_num.get(name[0:1])
         #Don't read the videos or jpg files
         if ext == ".avi" or ext == ".jpg":
           continue
@@ -103,6 +112,7 @@ def load_train_fold_img(train_path, fold, length):
     #index = fold - 1
     print('Now going to read files from fold {}'.format(fold))
     path = os.path.join(train_path, str(fold), '*g')
+    # print("path is=" + path)
     files = glob.glob(path)
     for fl in files:
         name, ext = os.path.splitext(os.path.basename(fl))
