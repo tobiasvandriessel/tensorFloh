@@ -15,6 +15,84 @@ class_map_num = {
 class_list = [ "Brushing", "Cutting", "Jumping", "Lunges", "Wall" ]
 
 
+def load_own_fold_img(own_path, length):
+    images = []
+    labels = []
+    img_names = []
+    cls = []
+
+    #index = fold - 1 (folds = {1,2,3,4,5})
+    #index = fold - 1
+    print('Now going to read files from own videos')
+    path = own_path
+    files = glob.glob(path)
+    for fl in files:
+        name, ext = os.path.splitext(os.path.basename(fl))
+        num = class_map_num.get(name[2:3])
+        #Don't read the videos or flow files
+        if ext == ".avi" or ext == ".flo":
+          continue
+
+        image = cv2.imread(fl)
+        #image = cv2.resize(image, (image_size, image_size),0,0, cv2.INTER_LINEAR)
+        image = image.astype(np.float32)
+        image = np.multiply(image, 1.0 / 255.0)
+        images.append(image)
+        # label = np.zeros(length)
+        # label[num] = 1.0
+        labels.append(num)
+        flbase = os.path.basename(fl)
+        img_names.append(flbase)
+        cls.append(class_list[num])
+    images = np.array(images)
+    labels = np.array(labels)
+    img_names = np.array(img_names)
+    cls = np.array(cls)
+
+    return images, labels, img_names, cls
+
+def load_own_fold_flow(own_path, length):
+    flows = []
+    labels = []
+    img_names = []
+    cls = []
+
+    # print('Going to read training images from fold ' + fold)
+    #index = fold - 1 (folds = {1,2,3,4,5})
+    # index = fold - 1
+    print('Now going to read files from own videos')
+    path = own_path
+    files = glob.glob(path)
+    for fl in files:
+        name, ext = os.path.splitext(os.path.basename(fl))
+        num = class_map_num.get(name[2:3])        
+        #Don't read the videos or jpg files
+        if ext == ".avi" or ext == ".jpg":
+          continue
+
+        flow = cv2.optflow.readOpticalFlow(fl)
+        flows.append(flow)
+
+
+        # image = cv2.imread(fl)
+        #image = cv2.resize(image, (image_size, image_size),0,0, cv2.INTER_LINEAR)
+        # image = image.astype(np.float32)
+        # image = np.multiply(image, 1.0 / 255.0)
+        # images.append(image)
+        # label = np.zeros(length)
+        # label[num] = 1.0
+        labels.append(num)
+        flbase = os.path.basename(fl)
+        img_names.append(flbase)
+        cls.append(class_list[num])
+    flows = np.array(flows)
+    labels = np.array(labels)
+    img_names = np.array(img_names)
+    cls = np.array(cls)
+
+    return flows, labels, img_names, cls
+
+
 def load_train_fold_img(train_path, fold, length):
     images = []
     labels = []
@@ -145,7 +223,7 @@ class DataSet(object):
     return self._images[start:end], self._labels[start:end], self._img_names[start:end], self._cls[start:end]
 
 
-def read_train_sets(train_path, validation_num, read_flow):
+def read_train_sets(train_path, own_path, validation_num, read_flow):
   class DataSets(object):
     pass
   data_sets = DataSets()
@@ -180,12 +258,19 @@ def read_train_sets(train_path, validation_num, read_flow):
   train_labels = np.concatenate((labels_array[0], labels_array[1], labels_array[2], labels_array[3]))
   train_img_names = np.concatenate((img_names_array[0], img_names_array[1], img_names_array[2], img_names_array[3]))
   train_cls = np.concatenate((cls_array[0], cls_array[1], cls_array[2], cls_array[3]))
-    
-  if not read_flow:
-    validation_images, validation_labels, validation_img_names, validation_cls = load_train_fold_img(train_path, validation_num, 5)
-  else:
-    validation_images, validation_labels, validation_img_names, validation_cls = load_train_fold_flow(train_path, validation_num, 5)
 
+  if validation_num != 0:
+    
+    if not read_flow:
+      validation_images, validation_labels, validation_img_names, validation_cls = load_train_fold_img(train_path, validation_num, 5)
+    else:
+      validation_images, validation_labels, validation_img_names, validation_cls = load_train_fold_flow(train_path, validation_num, 5)
+
+  else:
+    if not read_flow:
+      validation_images, validation_labels, validation_img_names, validation_cls = load_own_fold_img(own_path, 5)
+    else:
+      validation_images, validation_labels, validation_img_names, validation_cls = load_own_fold_flow(own_path, 5)
 
   # images, labels, img_names, cls = load_train_fold_img(train_path, classes, 5)
   #images, labels, img_names, cls = shuffle(images, labels, img_names, cls)  

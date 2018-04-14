@@ -20,6 +20,7 @@ validation_size = 0.2
 img_size = 120
 num_channels = 3
 train_path='data/UCF-101/folds'
+own_path='data/own'
 
 
 def eval_confusion_matrix(labels, predictions):
@@ -447,11 +448,14 @@ def run_model(model, dropout_rate, num_epochs, f):
 
     result_array = []
     
-    for i in range(1,6):
+    #Do cross validation
+    for i in range(0,6):
 
+        if i == 0:
+            f.write("Training on all folds and testing on test set now.\n")
         # We shall load all the training and validation images and labels into memory using openCV and use that during training
         #TODO we need to do cross validation
-        data = dataset.read_train_sets(train_path, i, False)
+        data = dataset.read_train_sets(train_path, own_path, i, False)
 
 
         # print("Complete reading input data. Will Now print a snippet of it")
