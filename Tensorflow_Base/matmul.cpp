@@ -131,19 +131,20 @@ void sortVectorSize4(vector<Point2f>& vec) {
 
 void doMaxKernelVector(Mat& input, Mat& output, int kernelSize) {
 	int inputWidth = input.size().width, inputHeight = input.size().height;
-	output = Mat(inputHeight - kernelSize + 1, inputWidth - kernelSize + 1, CV_32FC2);
+	//cout << "input sizes: " << inputHeight << ", " << inputWidth << endl;
+	output = Mat(inputHeight / 2, inputWidth / 2, CV_32FC2);
 
 	cout << "First four elements of input: " << input.at<Point2f>(0, 0) << ", " << input.at<Point2f>(0, 1) << ", " << input.at<Point2f>(1, 0) << ", " << input.at<Point2f>(1, 1) << endl;
 
 
 	vector<Point2f> temp(kernelSize*kernelSize);
-	for (int y = 0; y < inputHeight - kernelSize + 1; y++) {
-		for (int x = 0; x < inputWidth - kernelSize + 1; x++) {
+	for (int y = 0; y < inputHeight / 2; y++) {
+		for (int x = 0; x < inputWidth / 2; x++) {
 			temp.clear();
 
 			for (int ky = 0; ky < kernelSize; ky++) {
 				for (int kx = 0; kx < kernelSize; kx++) {
-					temp.push_back(input.at<Point2f>(y + ky, x + kx));
+					temp.push_back(input.at<Point2f>(2 * y + ky, 2 * x + kx));
 				}
 			}
 			if (kernelSize == 2)
@@ -322,6 +323,8 @@ int extractFeaturesFromVideo(string path) {
 	Mat prevGray, nextGray;
 	cvtColor(prevFrame, prevGray, CV_BGR2GRAY);
 	cvtColor(nextFrame, nextGray, CV_BGR2GRAY);
+
+	//cout << "size of prevGray: " << prevGray.size() << endl;
 	
 	//if (keypointsPrev.size() == 0) return 0;
 	Mat flow;
