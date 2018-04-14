@@ -70,7 +70,7 @@ def load_own_fold_flow(own_path, length):
     #index = fold - 1 (folds = {1,2,3,4,5})
     # index = fold - 1
     print('Now going to read files from own videos')
-    path = own_path
+    path = os.path.join(own_path, '*g')
     files = glob.glob(path)
     for fl in files:
         name, ext = os.path.splitext(os.path.basename(fl))
