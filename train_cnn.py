@@ -449,7 +449,7 @@ def run_model(model, dropout_rate, num_epochs, f):
     result_array = []
     
     #Do cross validation
-    for i in range(0,1):
+    for i in range(0,6):
 
         if i == 0:
             f.write("Training on all folds and testing on test set now.\n")
@@ -499,7 +499,7 @@ def run_model(model, dropout_rate, num_epochs, f):
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
             x={"x": data.train.images},
             y=data.train.labels,
-            batch_size=5,
+            batch_size=2,
             num_epochs=num_epochs,
             shuffle=True
         )
@@ -538,14 +538,14 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    for m in range(0,1):
+    for m in range(2,3):
         f.write("Starting model " + str(m) + " now\n")
         
         for dropout_rate in np.arange(0.65, 1.0, 0.45):
 
             f.write("Starting with dropout " + str(dropout_rate) + " now\n")     
 
-            for num_epochs in range(1, 2, 10):
+            for num_epochs in range(25, 34, 10):
 
                 f.write("Starting with num_epochs " + str(num_epochs) + " now\n")                
 
