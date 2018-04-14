@@ -126,7 +126,11 @@ def cnn_model_fn_old(features, labels, mode, params):
     print(predictions)
 
     if mode == tf.estimator.ModeKeys.PREDICT:
-        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+        if optical_flow
+            extra = "opticalflow"
+        elif
+            extra = "RGB"
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions,model_dir="/tmp/convnet_model"+extra)
 
     onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
     # a = tf.Print(logits, [logits])
@@ -545,9 +549,10 @@ def main(unused_argv):
     # eval_data = mnist.test.images # Returns np.array
     # eval_labels = np.asarray(mnist.test.labels, dtype=np.int32)
 
-    optical_flow = True
+    optical_flow = False
+    two_stream = False
 
-    for m in range(0,1):
+    for m in range(2,3):
         f.write("Starting model " + str(m) + " now\n")
         print("\nStarting model " + str(m) + " now\n\n")
         
@@ -598,8 +603,13 @@ def main(unused_argv):
                 f.write("test_prec: " + str(prec_test) + "\n")
                 f.write("test_rec: " + str(rec_test) + "\n")
                 f.write("test_fscore: " + str(fscore_test) + "\n" )
-
-                np.savetxt("conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_test.txt", result_array[0].get("confusion_matrix"))
+                if optical_flow
+                    extra = "flowmodel"
+                elif two_stream
+                    extra = "twostreammodel"
+                elif 
+                    extra = "ourmodel"
+                np.savetxt(extra + "/conf_mat_model" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs) + "_test.txt", result_array[0].get("confusion_matrix"))
 
 
                 # #STUPID
