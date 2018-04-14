@@ -160,6 +160,41 @@ void doMaxKernelVector(Mat& input, Mat& output, int kernelSize) {
 
 }
 
+void MeanFlowNormalization(Mat& input, Mat& output) {
+	int inputWidth = input.size().width, inputHeight = input.size().height;
+	//cout << "input sizes: " << inputHeight << ", " << inputWidth << endl;
+	output = Mat(inputHeight, inputWidth, CV_32FC2);
+
+	//cout << "First four elements of input: " << input.at<Point2f>(0, 0) << ", " << input.at<Point2f>(0, 1) << ", " << input.at<Point2f>(1, 0) << ", " << input.at<Point2f>(1, 1) << endl;
+
+	double sum_x = 0.0, sum_y = 0.0;
+	for (int y = 0; y < inputHeight; y++) {
+		for (int x = 0; x < inputWidth; x++) {
+			Point2f temp = input.at<Point2f>(y, x);
+			sum_x += temp.x;
+			sum_y += temp.y;
+
+		}
+	}
+
+	double avg_x = sum_x / (inputHeight * inputWidth);
+	double avg_y = sum_y / (inputHeight * inputWidth);
+
+	Point2f diff = Point2f(avg_x, avg_y);
+
+	cout << "diff: " << diff << endl;
+
+	for (int y = 0; y < inputHeight; y++) {
+		for (int x = 0; x < inputWidth; x++) {
+			Point2f temp = output.at<Point2f>(y, x);
+			output.at<Point2f>(y, x) = temp - diff;
+		}
+	}
+
+	cout << "First element of output: " << output.at<Point2f>(0, 0) << endl;
+
+}
+
 
 // Build a computation graph that takes a tensor of shape [?, 2] and
 // multiplies it by a hard-coded matrix.
@@ -338,8 +373,9 @@ int extractFeaturesFromVideo(string path) {
 	resize(prevGray, prevGrayResized, Size(120, 120), 0, 0, INTER_AREA);
 	resize(nextGray, nextGrayResized, Size(120, 120), 0, 0, INTER_AREA);
 
-	Mat outputFlow;
-	doMaxKernelVector(flow, outputFlow, 2);
+	Mat outputFlowTemp, outputFlow;
+	doMaxKernelVector(flow, outputFlowTemp, 2);
+	MeanFlowNormalization(outputFlowTemp, outputFlow);
 	
 	/*Mat cflow;
 	cvtColor(prevGrayResized, cflow, CV_GRAY2BGR);
@@ -401,6 +437,7 @@ int main()
 
 	if (answer == "y") {
 		cout << "read y " << endl;
+		handleOfflineStuff();
 		handleOfflineStuffOwn();
 	}
 	else if (answer == "n") {
