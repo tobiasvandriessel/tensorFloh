@@ -535,7 +535,7 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
 
     return result_array
 
-def run_two_stream_model(model, optical_flow, dropout_rate, num_epochs):
+def run_two_stream_model(model, dropout_rate, num_epochs):
 
     result_array = []
     
@@ -546,7 +546,9 @@ def run_two_stream_model(model, optical_flow, dropout_rate, num_epochs):
             print("Training on all folds and testing on test set now.\n")
         # We shall load all the training and validation images and labels into memory using openCV and use that during training
         #TODO we need to do cross validation
-        data = dataset.read_train_sets(train_path, own_path, i, optical_flow)
+        data_img = dataset.read_train_sets(train_path, own_path, i, False)
+        data_flow = dataset.read_train_sets(train_path, own_path, i, True)
+        
 
 
         # print("Complete reading input data. Will Now print a snippet of it")
@@ -591,8 +593,8 @@ def run_two_stream_model(model, optical_flow, dropout_rate, num_epochs):
 
 
         train_input_fn = tf.estimator.inputs.numpy_input_fn(
-            x={"x": data.train.images},
-            y=data.train.labels,
+            x={"x": data_img.train.images},
+            y=data_img.train.labels,
             batch_size=2,
             num_epochs=num_epochs,
             shuffle=True,
@@ -607,8 +609,8 @@ def run_two_stream_model(model, optical_flow, dropout_rate, num_epochs):
 
         # Evaluate the model and print results
         pred_input_fn = tf.estimator.inputs.numpy_input_fn(
-            x={"x": data.valid.images},
-            y=data.valid.labels,
+            x={"x": data_img.valid.images},
+            y=data_img.valid.labels,
             num_epochs=1,
             shuffle=False
         )
@@ -653,8 +655,8 @@ def run_two_stream_model(model, optical_flow, dropout_rate, num_epochs):
 
 
         train_input_fn_flow = tf.estimator.inputs.numpy_input_fn(
-            x={"x": data.train.images},
-            y=data.train.labels,
+            x={"x": data_flow.train.images},
+            y=data_flow.train.labels,
             batch_size=2,
             num_epochs=num_epochs,
             shuffle=True,
@@ -669,8 +671,8 @@ def run_two_stream_model(model, optical_flow, dropout_rate, num_epochs):
 
         # Evaluate the model and print results
         pred_input_fn_flow = tf.estimator.inputs.numpy_input_fn(
-            x={"x": data.valid.images},
-            y=data.valid.labels,
+            x={"x": data_flow.valid.images},
+            y=data_flow.valid.labels,
             num_epochs=1,
             shuffle=False
         )
