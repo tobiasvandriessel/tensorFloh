@@ -231,6 +231,37 @@ int handleOfflineStuff() {
 	
 }
 
+int handleOfflineStuffOwn() {
+	const string m_data_path = "../data/own/";
+
+	DIR *dir, *dir1;
+	struct dirent *ent, *ent1;
+	if ((dir = opendir(m_data_path.c_str())) != NULL) {
+		cout << "Entered dir: " << m_data_path << endl;
+		/* print all the files and directories within directory */
+		while ((ent = readdir(dir)) != NULL) {
+			if (strcmp(ent->d_name, ".") == 0 || strcmp(ent->d_name, "..") == 0 || strcmp(strrchr(ent->d_name, '.'), ".flo") == 0
+				|| strcmp(strrchr(ent->d_name, '.'), ".jpg") == 0)
+				continue;
+
+			extractFeaturesFromVideo(m_data_path + ent->d_name + "/" + ent1->d_name);
+
+
+
+			printf("%s\n", ent->d_name);
+		}
+		closedir(dir);
+	}
+	else {
+		/* could not open directory */
+		perror("");
+		return EXIT_FAILURE;
+	}
+
+
+
+}
+
 int extractFeaturesFromVideo(string path) {
 	//string videoFileLocation = "1/v_BrushingTeeth_g01_c03.avi";
 
