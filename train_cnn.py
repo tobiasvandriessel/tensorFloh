@@ -468,6 +468,8 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
 
         classifier = None
 
+# extra +"/outputfile" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs)
+
         if optical_flow:
             extra = "flowmodel"
         else:
@@ -481,7 +483,7 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
                     'dropout_rate': dropout_rate,
                     'depth':        depth,
                 },
-                model_dir="/tmp/convnet_model/"+extra                
+                # model_dir="/tmp/convnet_model/"+extra                
             )
         elif model == 1:
             classifier = tf.estimator.Estimator(
@@ -490,7 +492,7 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
                     'dropout_rate': dropout_rate,
                     'depth':        depth
                 },
-                model_dir="/tmp/convnet_model/"+extra  
+                # model_dir="/tmp/convnet_model/"+extra  
             )
         else:
             classifier = tf.estimator.Estimator(
@@ -499,7 +501,7 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
                     'dropout_rate': dropout_rate,
                     'depth':        depth
                 },
-                model_dir="/tmp/convnet_model/"+extra  
+                # model_dir="/tmp/convnet_model/"+extra  
             )
 
         tensors_to_log = {"probabilities": "softmax_tensor"}
