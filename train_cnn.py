@@ -310,6 +310,124 @@ def cnn_model_fn_new(features, labels, mode, params):
         mode=mode, loss=loss, eval_metric_ops=eval_metric_ops
     )
 
+def cnn_model_fn_simple(features, labels, mode, params):
+    # Input Layer
+    input_layer = tf.reshape(features["x"], [-1, 120, 120, params['depth']])
+
+    
+    #I don't think our first layer needs this big kernel size, probably too big for our input size. Maybe 5 is enough
+    conv1 = tf.layers.conv2d(
+        inputs=input_layer,
+        filters=96,
+        kernel_size=[5, 5],
+        strides=(2,2),
+        padding="valid",
+        activation=tf.nn.relu)
+
+    # norm1 = tf.nn.lrn(conv1, 5, 2, 0.0001, 0.75)
+
+    
+    pool1 = tf.layers.max_pooling2d(inputs=conv1, pool_size=[3,3], strides=2)
+
+
+    conv2 = tf.layers.conv2d(
+        inputs=pool1,
+        filters=256,
+        kernel_size=[3, 3],
+        strides=(2,2),
+        padding="valid",
+        activation=tf.nn.relu)
+
+    # norm2 = tf.nn.lrn(conv2, 5, 2, 0.0001, 0.75)
+
+    # pool2 = tf.layers.max_pooling2d(inputs=conv2, pool_size=[3,3], strides=2)
+
+
+    conv3 = tf.layers.conv2d(
+        inputs=conv2,
+        filters=512,
+        kernel_size=[3, 3],
+        strides=(2,2),
+        padding="valid",
+        activation=tf.nn.relu)
+
+    # pool3 = tf.layers.max_pooling2d(inputs=conv5, pool_size=[3,3], strides=2)
+
+    print(conv3) #//[batch, 6, 6, 512]
+
+    pool3_flat = tf.reshape(conv3, [-1, 6 * 6 * 512])
+
+    #Not sure if relu ois the correct activation function, probably in paper
+    dense1 = tf.layers.dense(inputs=pool3_flat, units=4096, activation=tf.nn.relu)
+    
+    #Random rate now, in paper is correct one
+    dropout1 = tf.layers.dropout(inputs=dense1, rate=params['dropout_rate'], training=mode == tf.estimator.ModeKeys.TRAIN)
+
+    
+    #Not sure if relu ois the correct activation function, probably in paper
+    dense2 = tf.layers.dense(inputs=dropout1, units=2048, activation=tf.nn.relu)
+    
+    #Random rate now, in paper is correct one
+    dropout2 = tf.layers.dropout(inputs=dense2, rate=params['dropout_rate'], training=mode == tf.estimator.ModeKeys.TRAIN)
+
+    logits = tf.layers.dense(inputs=dropout2, units=5)
+
+
+    print(logits)
+
+    predictions= {
+        "classes":  tf.argmax(input=logits, axis=1),
+        "probabilities": tf.nn.softmax(logits, name="softmax_tensor")        
+    }
+
+    print(predictions)
+
+    if mode == tf.estimator.ModeKeys.PREDICT:
+        return tf.estimator.EstimatorSpec(mode=mode, predictions=predictions)
+
+    onehot_labels = tf.one_hot(indices=tf.cast(labels, tf.int32), depth=5)
+    # a = tf.Print(logits, [logits])
+    # a.eval()
+    # for i in range(0,4):
+    #     for j in range(0,5):
+    #         print(logits[i][j])
+        # print(logits[i])
+    # print(labels)
+    # print(logits)
+    loss = tf.losses.softmax_cross_entropy(
+        onehot_labels=onehot_labels, logits=logits
+    )
+
+
+    if mode == tf.estimator.ModeKeys.TRAIN:
+        optimizer = tf.train.GradientDescentOptimizer(learning_rate=0.001) #This changes over the iterations
+        train_op = optimizer.minimize(
+            loss=loss,
+            global_step=tf.train.get_global_step()
+        )
+        return tf.estimator.EstimatorSpec(mode=mode, loss=loss, train_op=train_op)
+
+    P = tf.metrics.precision(
+        labels=labels, predictions=predictions["classes"])
+    R = tf.metrics.recall(
+        labels=labels, predictions=predictions["classes"])
+
+    eval_metric_ops = {
+        "accuracy": tf.metrics.accuracy(
+            labels=labels, predictions=predictions["classes"]
+            
+        ) ,
+        "recall": R 
+        ,
+        "precision": P
+        ,
+        "confusion_matrix": eval_confusion_matrix(labels=labels, predictions=predictions["classes"])
+    }
+
+    return tf.estimator.EstimatorSpec(
+        mode=mode, loss=loss, eval_metric_ops=eval_metric_ops
+    )
+
 def cnn_model_fn_newnew(features, labels, mode, params):
     """Model function for CNN."""
     # Input Layer
@@ -494,9 +612,18 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
                 },
                 # model_dir="/tmp/convnet_model/"+extra  
             )
-        else:
+        elif model == 2:
             classifier = tf.estimator.Estimator(
                 model_fn=cnn_model_fn_newnew,
+                params={
+                    'dropout_rate': dropout_rate,
+                    'depth':        depth
+                },
+                # model_dir="/tmp/convnet_model/"+extra  
+            )
+        else:
+            classifier = tf.estimator.Estimator(
+                model_fn=cnn_model_fn_simple,
                 params={
                     'dropout_rate': dropout_rate,
                     'depth':        depth
@@ -741,7 +868,7 @@ def main(unused_argv):
 
         print("\nStarting with optical flow: " + str(opt) + " now\n\n")
 
-        for m in range(0,3):
+        for m in range(3,4):
             if m == 1 or (opt == 1 and m == 0):
                 continue
             # f.write("Starting model " + str(m) + " now\n")
