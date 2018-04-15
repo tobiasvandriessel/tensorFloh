@@ -470,10 +470,10 @@ def run_model(model, optical_flow, dropout_rate, num_epochs):
 
 # extra +"/outputfile" + str(m) + "_drop" + str(dropout_rate) + "_epochs" + str(num_epochs)
 
-        if optical_flow:
-            extra = "flowmodel"
-        else:
-            extra = "ourmodel"
+        # if optical_flow:
+        #     extra = "flowmodel"
+        # else:
+        #     extra = "ourmodel"
 
         # Create the estimator        
         if model == 0:
@@ -736,13 +736,13 @@ def main(unused_argv):
     two_stream = False
 
     for opt in range(0,2):
-        if opt == 0:
+        if opt == 1:
             optical_flow = False
 
         print("\nStarting with optical flow: " + str(opt) + " now\n\n")
 
         for m in range(0,3):
-            if m == 1:
+            if m == 1 or (opt == 1 and m == 0):
                 continue
             # f.write("Starting model " + str(m) + " now\n")
             print("\nStarting model " + str(m) + " now\n\n")
