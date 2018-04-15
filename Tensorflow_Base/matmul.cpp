@@ -195,6 +195,22 @@ void MeanFlowNormalization(Mat& input, Mat& output) {
 
 }
 
+void MirrorOpticalFlow(Mat& input, Mat& output) {
+	int inputWidth = input.size().width, inputHeight = input.size().height;
+	//cout << "input sizes: " << inputHeight << ", " << inputWidth << endl;
+	output = Mat(inputHeight, inputWidth, CV_32FC2);
+
+	//cout << "First four elements of input: " << input.at<Point2f>(0, 0) << ", " << input.at<Point2f>(0, 1) << ", " << input.at<Point2f>(1, 0) << ", " << input.at<Point2f>(1, 1) << endl;
+
+	for (int y = 0; y < inputHeight; y++) {
+		for (int x = 0; x < inputWidth; x++) {
+			Point2f temp = input.at<Point2f>(y, x);
+			temp.x *= -1.0;
+			output.at<Point2f>(y, x) = temp;
+		}
+	}
+}
+
 
 // Build a computation graph that takes a tensor of shape [?, 2] and
 // multiplies it by a hard-coded matrix.
@@ -373,9 +389,11 @@ int extractFeaturesFromVideo(string path) {
 	resize(prevGray, prevGrayResized, Size(120, 120), 0, 0, INTER_AREA);
 	resize(nextGray, nextGrayResized, Size(120, 120), 0, 0, INTER_AREA);
 
-	Mat outputFlowTemp, outputFlow;
+	Mat outputFlowTemp, outputFlow, outputFlow2;
 	doMaxKernelVector(flow, outputFlowTemp, 2);
 	MeanFlowNormalization(outputFlowTemp, outputFlow);
+
+	MirrorOpticalFlow(outputFlow, outputFlow2);
 	
 	/*Mat cflow;
 	cvtColor(prevGrayResized, cflow, CV_GRAY2BGR);
@@ -393,16 +411,23 @@ int extractFeaturesFromVideo(string path) {
 	fs.release();*/
 
 	optflow::writeOpticalFlow(flowfilepath + ".flo", outputFlow);
+	optflow::writeOpticalFlow(flowfilepath + "_mirror.flo", outputFlow2);
+
 
 	
 
 	resize(prevFrame, prevFrame, Size(120, 120), 0, 0, INTER_AREA);
+
+	Mat prevFrameMirror;
+	flip(prevFrame, prevFrameMirror, 1);
 
 	/*FileStorage fs1(imgfilepath, FileStorage::WRITE);
 	fs1 << "img" << prevFrame;
 	fs1.release();*/
 
 	imwrite(imgfilepath + ".jpg", prevFrame);
+	imwrite(imgfilepath + "_mirror.jpg", prevFrameMirror);
+
 
 
 	/*for (int i = 0; i < length; i++) {
